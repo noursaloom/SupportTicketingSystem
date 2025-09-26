@@ -4,15 +4,15 @@ public class CreateTicketDto
 {
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public TicketPriority Priority { get; set; } = TicketPriority.Low;
+    public int Priority { get; set; } = 0;
 }
 
 public class UpdateTicketDto
 {
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public TicketPriority Priority { get; set; }
-    public TicketStatus Status { get; set; }
+    public int Priority { get; set; }
+    public int Status { get; set; }
 }
 
 public class TicketDto

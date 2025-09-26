@@ -50,6 +50,11 @@ public class TicketsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<TicketDto>> CreateTicket([FromBody] CreateTicketDto createTicketDto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        
         try
         {
             var userId = GetUserId();
@@ -60,9 +65,13 @@ public class TicketsController : ControllerBase
             
             return CreatedAtAction(nameof(GetTicket), new { id = ticket.Id }, ticket);
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while creating the ticket", details = ex.Message });
         }
     }
 

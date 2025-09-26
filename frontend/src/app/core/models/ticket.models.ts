@@ -27,14 +27,14 @@ export enum TicketStatus {
 export interface CreateTicketRequest {
   title: string;
   description: string;
-  priority: TicketPriority;
+  priority: number;
 }
 
 export interface UpdateTicketRequest {
   title: string;
   description: string;
-  priority: TicketPriority;
-  status: TicketStatus;
+  priority: number;
+  status: number;
 }
 
 export interface AssignTicketRequest {

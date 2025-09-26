@@ -56,7 +56,7 @@ public class TicketService : ITicketService
         {
             Title = createTicketDto.Title,
             Description = createTicketDto.Description,
-            Priority = createTicketDto.Priority,
+            Priority = (TicketPriority)createTicketDto.Priority,
             Status = TicketStatus.Open,
             CreatedByUserId = userId,
             CreatedAt = DateTime.UtcNow
@@ -90,8 +90,8 @@ public class TicketService : ITicketService
 
         ticket.Title = updateTicketDto.Title;
         ticket.Description = updateTicketDto.Description;
-        ticket.Priority = updateTicketDto.Priority;
-        ticket.Status = updateTicketDto.Status;
+        ticket.Priority = (TicketPriority)updateTicketDto.Priority;
+        ticket.Status = (TicketStatus)updateTicketDto.Status;
 
         await _context.SaveChangesAsync();
 

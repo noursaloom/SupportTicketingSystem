@@ -214,7 +214,12 @@ export class TicketFormComponent implements OnInit {
       this.loading = true;
 
       if (this.isEditMode && this.ticketId) {
-        const updateRequest: UpdateTicketRequest = this.ticketForm.value;
+        const updateRequest: UpdateTicketRequest = {
+          title: this.ticketForm.value.title,
+          description: this.ticketForm.value.description,
+          priority: Number(this.ticketForm.value.priority),
+          status: Number(this.ticketForm.value.status)
+        };
         this.ticketService.updateTicket(this.ticketId, updateRequest).subscribe({
           next: (ticket) => {
             this.snackBar.open('Ticket updated successfully!', 'Close', { duration: 3000 });
@@ -230,7 +235,7 @@ export class TicketFormComponent implements OnInit {
         const createRequest: CreateTicketRequest = {
           title: this.ticketForm.value.title,
           description: this.ticketForm.value.description,
-          priority: this.ticketForm.value.priority
+          priority: Number(this.ticketForm.value.priority)
         };
 
         this.ticketService.createTicket(createRequest).subscribe({
