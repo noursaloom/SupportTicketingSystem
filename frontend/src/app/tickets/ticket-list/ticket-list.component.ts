@@ -258,8 +258,8 @@ export class TicketListComponent implements OnInit {
 
   applyFilters(): void {
     this.filteredTickets = this.tickets.filter(ticket => {
-      const statusMatch = this.statusFilter === '' || ticket.status === this.statusFilter;
-      const priorityMatch = this.priorityFilter === '' || ticket.priority === this.priorityFilter;
+      const statusMatch = this.statusFilter === '' || ticket.status.toString() === this.statusFilter.toString();
+      const priorityMatch = this.priorityFilter === '' || ticket.priority.toString() === this.priorityFilter.toString();
       return statusMatch && priorityMatch;
     });
   }

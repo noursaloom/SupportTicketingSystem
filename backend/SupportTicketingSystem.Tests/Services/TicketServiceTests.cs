@@ -3,6 +3,7 @@ using SupportTicketingSystem.Api.Data;
 using SupportTicketingSystem.Api.Models;
 using SupportTicketingSystem.Api.Models.DTOs;
 using SupportTicketingSystem.Api.Services;
+using Xunit;
 
 namespace SupportTicketingSystem.Tests.Services;
 

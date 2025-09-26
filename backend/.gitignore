@@ -1,0 +1,50 @@
+# .NET build folders
+bin/
+obj/
+Debug/
+Release/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# NuGet packages
+*.nupkg
+packages/
+*.snupkg
+
+# Rider/IDE files
+.idea/
+*.iml
+
+# Node / Angular dependencies (if frontend is included)
+node_modules/
+
+# Logs
+*.log
+logs/
+
+# SQLite database (if local only)
+*.db
+*.sqlite
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.DS_Store
+
+# Environment variables
+.env
+.env.local
+
+# Build outputs
+dist/
+out/
+
+# Others
+.vscode/
+.vs/

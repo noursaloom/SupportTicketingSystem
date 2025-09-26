@@ -78,8 +78,8 @@ import { LoginRequest } from '../../core/models/auth.models';
         <mat-card-footer>
           <div class="demo-accounts">
             <h4>Demo Accounts</h4>
-            <p><strong>Admin:</strong> admin@demo.com / password</p>
-            <p><strong>User:</strong> user@demo.com / password</p>
+            <p><strong>Admin:</strong> admin&#64;demo.com / password</p>
+            <p><strong>User:</strong> user&#64;demo.com / password</p>
           </div>
         </mat-card-footer>
       </mat-card>

@@ -9,6 +9,7 @@ import { filter } from 'rxjs/operators';
 
 import { AuthService } from './core/services/auth.service';
 import { User, UserRole } from './core/models/auth.models';
+import { MatDividerModule } from '@angular/material/divider'; 
 
 @Component({
   selector: 'app-root',
@@ -19,7 +20,8 @@ import { User, UserRole } from './core/models/auth.models';
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
-    MatMenuModule
+    MatMenuModule,
+    MatDividerModule
   ],
   template: `
     <div class="app-container">
@@ -106,19 +108,19 @@ export class AppComponent implements OnInit {
     private authService: AuthService,
     private router: Router
   ) {}
+ngOnInit() {
+  this.authService.currentUser$.subscribe(user => {
+    this.currentUser = user;
+  });
 
-  ngOnInit() {
-    this.authService.currentUser$.subscribe(user => {
-      this.currentUser = user;
-    });
-
-    // Hide toolbar on auth pages
-    this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
-    ).subscribe((event: NavigationEnd) => {
-      this.showToolbar = !['/login', '/register'].includes(event.url);
-    });
-  }
+  // Hide toolbar on auth pages
+  this.router.events.pipe(
+    filter(event => event instanceof NavigationEnd)
+  ).subscribe(event => {
+    const navEnd = event as NavigationEnd;  
+    this.showToolbar = !['/login', '/register'].includes(navEnd.url);
+  });
+}
 
   get isAdmin(): boolean {
     return this.currentUser?.role === UserRole.Admin;
