@@ -151,5 +151,85 @@ public static class DatabaseInitializer
 
         context.Tickets.AddRange(tickets);
         await context.SaveChangesAsync();
+
+        // Create demo notifications
+        var notifications = new[]
+        {
+            new Notification
+            {
+                UserId = receiverUser.Id,
+                TicketId = tickets[0].Id,
+                Type = NotificationType.TicketCreated,
+                Message = $"New ticket created: {tickets[0].Title}",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow.AddDays(-2)
+            },
+            new Notification
+            {
+                UserId = adminUser.Id,
+                TicketId = tickets[0].Id,
+                Type = NotificationType.TicketCreated,
+                Message = $"New ticket created: {tickets[0].Title}",
+                IsRead = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-2)
+            },
+            new Notification
+            {
+                UserId = legacyUser.Id,
+                TicketId = tickets[1].Id,
+                Type = NotificationType.TicketStatusChanged,
+                Message = $"Ticket status changed from Open to Pending: {tickets[1].Title}",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow.AddDays(-1)
+            },
+            new Notification
+            {
+                UserId = receiverUser.Id,
+                TicketId = tickets[1].Id,
+                Type = NotificationType.TicketAssigned,
+                Message = $"You have been assigned to ticket: {tickets[1].Title}",
+                IsRead = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-1)
+            },
+            new Notification
+            {
+                UserId = receiverUser.Id,
+                TicketId = tickets[2].Id,
+                Type = NotificationType.TicketCreated,
+                Message = $"New ticket created: {tickets[2].Title}",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow.AddHours(-6)
+            },
+            new Notification
+            {
+                UserId = adminUser.Id,
+                TicketId = tickets[2].Id,
+                Type = NotificationType.TicketCreated,
+                Message = $"New ticket created: {tickets[2].Title}",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow.AddHours(-6)
+            },
+            new Notification
+            {
+                UserId = legacyUser.Id,
+                TicketId = tickets[3].Id,
+                Type = NotificationType.TicketStatusChanged,
+                Message = $"Ticket status changed from Pending to Resolved: {tickets[3].Title}",
+                IsRead = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-3)
+            },
+            new Notification
+            {
+                UserId = receiverUser.Id,
+                TicketId = tickets[3].Id,
+                Type = NotificationType.TicketAssigned,
+                Message = $"You have been assigned to ticket: {tickets[3].Title}",
+                IsRead = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-3)
+            }
+        };
+
+        context.Notifications.AddRange(notifications);
+        await context.SaveChangesAsync();
     }
 }
