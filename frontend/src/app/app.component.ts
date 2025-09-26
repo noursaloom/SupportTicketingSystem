@@ -5,9 +5,11 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatBadgeModule } from '@angular/material/badge';
 import { filter } from 'rxjs/operators';
 
 import { AuthService } from './core/services/auth.service';
+import { NotificationService } from './core/services/notification.service';
 import { User, UserRole } from './core/models/auth.models';
 import { MatDividerModule } from '@angular/material/divider'; 
 
@@ -20,8 +22,9 @@ import { MatDividerModule } from '@angular/material/divider';
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
+    MatDividerModule,
     MatMenuModule,
-    MatDividerModule
+    MatBadgeModule
   ],
   template: `
     <div class="app-container">
@@ -43,6 +46,17 @@ import { MatDividerModule } from '@angular/material/divider';
           <button mat-button routerLink="/users" *ngIf="isAdmin">
             <mat-icon>people</mat-icon>
             Users
+          </button>
+          
+          <button mat-button routerLink="/projects" *ngIf="isAdmin">
+            <mat-icon>folder</mat-icon>
+            Projects
+          </button>
+          
+          <button mat-icon-button routerLink="/notifications" matTooltip="Notifications">
+            <mat-icon [matBadge]="unreadCount" [matBadgeHidden]="unreadCount === 0" matBadgeColor="warn">
+              notifications
+            </mat-icon>
           </button>
           
           <button mat-icon-button [matMenuTriggerFor]="userMenu">
@@ -103,15 +117,18 @@ import { MatDividerModule } from '@angular/material/divider';
 export class AppComponent implements OnInit {
   currentUser: User | null = null;
   showToolbar = true;
+  unreadCount = 0;
 
   constructor(
     private authService: AuthService,
+    private notificationService: NotificationService,
     private router: Router
   ) {}
-ngOnInit() {
-  this.authService.currentUser$.subscribe(user => {
-    this.currentUser = user;
-  });
+
+  ngOnInit() {
+    this.authService.currentUser$.subscribe(user => {
+      this.currentUser = user;
+    });
 
   // Hide toolbar on auth pages
   this.router.events.pipe(

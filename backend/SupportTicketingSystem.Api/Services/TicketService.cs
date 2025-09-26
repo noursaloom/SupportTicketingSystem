@@ -8,10 +8,12 @@ namespace SupportTicketingSystem.Api.Services;
 public class TicketService : ITicketService
 {
     private readonly ApplicationDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public TicketService(ApplicationDbContext context)
+    public TicketService(ApplicationDbContext context, INotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     public async Task<IEnumerable<TicketDto>> GetTicketsAsync(int userId, bool isAdmin)
@@ -21,7 +23,10 @@ public class TicketService : ITicketService
             .Include(t => t.AssignedToUser)
             .AsQueryable();
 
-        if (!isAdmin)
+        // TicketAppliers can only see their own tickets
+        // TicketReceivers and Admins can see all tickets
+        var user = await _context.Users.FindAsync(userId);
+        if (user?.Role == UserRole.TicketApplier)
         {
             query = query.Where(t => t.CreatedByUserId == userId);
         }
@@ -40,7 +45,8 @@ public class TicketService : ITicketService
         if (ticket == null)
             return null;
 
-        if (!isAdmin && ticket.CreatedByUserId != userId)
+        var user = await _context.Users.FindAsync(userId);
+        if (user?.Role == UserRole.TicketApplier && ticket.CreatedByUserId != userId)
             return null;
 
         return MapToTicketDto(ticket);
@@ -60,6 +66,9 @@ public class TicketService : ITicketService
 
         _context.Tickets.Add(ticket);
         await _context.SaveChangesAsync();
+
+        // Create notification for ticket receivers and admins
+        await _notificationService.CreateTicketCreatedNotificationAsync(ticket);
 
         await _context.Entry(ticket)
             .Reference(t => t.CreatedByUser)
@@ -81,12 +90,22 @@ public class TicketService : ITicketService
         if (!isAdmin && ticket.CreatedByUserId != userId)
             throw new UnauthorizedAccessException("Not authorized to update this ticket");
 
+        var oldStatus = ticket.Status;
+        var oldAssigneeId = ticket.AssignedToUserId;
+
         ticket.Title = updateTicketDto.Title;
         ticket.Description = updateTicketDto.Description;
         ticket.Priority = updateTicketDto.Priority;
         ticket.Status = updateTicketDto.Status;
 
         await _context.SaveChangesAsync();
+
+        // Create notifications for status changes
+        if (oldStatus != ticket.Status)
+        {
+            await _notificationService.CreateTicketStatusChangedNotificationAsync(ticket, oldStatus);
+        }
+
         return MapToTicketDto(ticket);
     }
 
@@ -119,8 +138,12 @@ public class TicketService : ITicketService
         if (assignee == null)
             throw new InvalidOperationException("User not found");
 
+        var oldAssigneeId = ticket.AssignedToUserId;
         ticket.AssignedToUserId = assignTicketDto.UserId;
         await _context.SaveChangesAsync();
+
+        // Create notification for newly assigned user
+        await _notificationService.CreateTicketAssignedNotificationAsync(ticket, oldAssigneeId);
 
         await _context.Entry(ticket)
             .Reference(t => t.AssignedToUser)

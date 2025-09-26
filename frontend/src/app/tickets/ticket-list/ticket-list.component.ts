@@ -266,7 +266,7 @@ export class TicketListComponent implements OnInit {
 
   canEditTicket(ticket: Ticket): boolean {
     const currentUser = this.authService.getCurrentUser();
-    return currentUser?.role === 1 || ticket.createdByUser.id === currentUser?.id;
+    return this.authService.isAdminOrReceiver() || ticket.createdByUser.id === currentUser?.id;
   }
 
   getStatusLabel(status: TicketStatus): string {

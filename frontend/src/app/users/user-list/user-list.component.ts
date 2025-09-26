@@ -10,7 +10,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 
 import { AuthService } from '../../core/services/auth.service';
-import { User, UserRole } from '../../core/models/auth.models';
+import { User, UserRole, USER_ROLE_LABELS } from '../../core/models/auth.models';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { UserFormDialogComponent } from '../user-form-dialog/user-form-dialog.component';
 
@@ -128,14 +128,19 @@ import { UserFormDialogComponent } from '../user-form-dialog/user-form-dialog.co
     }
 
     .role-chip {
+      &.ticket-applier {
+        background-color: #e3f2fd;
+        color: #1976d2;
+      }
+      
+      &.ticket-receiver {
+        background-color: #fff3e0;
+        color: #f57c00;
+      }
+      
       &.admin {
         background-color: #e8f5e8;
         color: #388e3c;
-      }
-      
-      &.user {
-        background-color: #e3f2fd;
-        color: #1976d2;
       }
     }
 
@@ -245,10 +250,15 @@ export class UserListComponent implements OnInit {
   }
 
   getRoleLabel(role: UserRole): string {
-    return role === UserRole.Admin ? 'Admin' : 'User';
+    return USER_ROLE_LABELS[role] || 'Unknown';
   }
 
   getRoleClass(role: UserRole): string {
-    return role === UserRole.Admin ? 'role-chip admin' : 'role-chip user';
+    const roleClassMap: Record<UserRole, string> = {
+      [UserRole.TicketApplier]: 'role-chip ticket-applier',
+      [UserRole.TicketReceiver]: 'role-chip ticket-receiver',
+      [UserRole.Admin]: 'role-chip admin'
+    };
+    return roleClassMap[role] || 'role-chip';
   }
 }

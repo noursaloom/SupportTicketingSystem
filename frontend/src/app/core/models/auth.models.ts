@@ -7,8 +7,9 @@ export interface User {
 }
 
 export enum UserRole {
-  User = 0,
-  Admin = 1
+  TicketApplier = 0,
+  TicketReceiver = 1,
+  Admin = 2
 }
 
 export interface RegisterRequest {
@@ -38,4 +39,10 @@ export interface UpdateUserRequest {
   name: string;
   email: string;
   role: UserRole;
+}
+
+export const USER_ROLE_LABELS: Record<UserRole, string> = {
+  [UserRole.TicketApplier]: 'Ticket Applier',
+  [UserRole.TicketReceiver]: 'Ticket Receiver',
+  [UserRole.Admin]: 'Admin'
 }

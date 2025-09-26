@@ -50,7 +50,12 @@ export class AuthService {
 
   isAdmin(): boolean {
     const user = this.getCurrentUser();
-    return user?.role === 1; // Admin role
+    return user?.role === UserRole.Admin;
+  }
+
+  isAdminOrReceiver(): boolean {
+    const user = this.getCurrentUser();
+    return user?.role === UserRole.Admin || user?.role === UserRole.TicketReceiver;
   }
 
   // User management methods (Admin only)

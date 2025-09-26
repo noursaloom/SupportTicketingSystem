@@ -23,16 +23,73 @@ public static class DatabaseInitializer
             CreatedAt = DateTime.UtcNow
         };
 
-        var regularUser = new User
+        var applierUser = new User
         {
-            Name = "Regular User",
-            Email = "user@demo.com",
+            Name = "Ticket Applier",
+            Email = "applier@demo.com",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("password"),
-            Role = UserRole.User,
+            Role = UserRole.TicketApplier,
             CreatedAt = DateTime.UtcNow
         };
 
-        context.Users.AddRange(adminUser, regularUser);
+        var receiverUser = new User
+        {
+            Name = "Ticket Receiver",
+            Email = "receiver@demo.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password"),
+            Role = UserRole.TicketReceiver,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        // Keep legacy user for backward compatibility
+        var legacyUser = new User
+        {
+            Name = "Legacy User",
+            Email = "user@demo.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password"),
+            Role = UserRole.TicketApplier,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        context.Users.AddRange(adminUser, applierUser, receiverUser, legacyUser);
+        await context.SaveChangesAsync();
+
+        // Create demo projects
+        var webProject = new Project
+        {
+            Name = "Web Application",
+            Description = "Main web application development and maintenance",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var mobileProject = new Project
+        {
+            Name = "Mobile App",
+            Description = "Mobile application for iOS and Android platforms",
+            CreatedAt = DateTime.UtcNow.AddDays(-10)
+        };
+
+        var apiProject = new Project
+        {
+            Name = "API Services",
+            Description = "Backend API services and microservices",
+            CreatedAt = DateTime.UtcNow.AddDays(-5)
+        };
+
+        context.Projects.AddRange(webProject, mobileProject, apiProject);
+        await context.SaveChangesAsync();
+
+        // Assign users to projects
+        var userProjects = new[]
+        {
+            new UserProject { UserId = applierUser.Id, ProjectId = webProject.Id, AssignedAt = DateTime.UtcNow },
+            new UserProject { UserId = receiverUser.Id, ProjectId = webProject.Id, AssignedAt = DateTime.UtcNow },
+            new UserProject { UserId = legacyUser.Id, ProjectId = webProject.Id, AssignedAt = DateTime.UtcNow },
+            new UserProject { UserId = applierUser.Id, ProjectId = mobileProject.Id, AssignedAt = DateTime.UtcNow },
+            new UserProject { UserId = receiverUser.Id, ProjectId = apiProject.Id, AssignedAt = DateTime.UtcNow }
+        };
+
+        context.UserProjects.AddRange(userProjects);
         await context.SaveChangesAsync();
 
         // Create demo tickets
@@ -44,8 +101,9 @@ public static class DatabaseInitializer
                 Description = "Cannot login to the system with correct credentials",
                 Priority = TicketPriority.High,
                 Status = TicketStatus.Open,
-                CreatedByUserId = regularUser.Id,
-                CreatedAt = DateTime.UtcNow.AddDays(-2)
+                CreatedByUserId = applierUser.Id,
+                CreatedAt = DateTime.UtcNow.AddDays(-2),
+                ProjectId = webProject.Id
             },
             new Ticket
             {
@@ -53,9 +111,10 @@ public static class DatabaseInitializer
                 Description = "Please add dark mode theme option to the application",
                 Priority = TicketPriority.Low,
                 Status = TicketStatus.Pending,
-                CreatedByUserId = regularUser.Id,
-                AssignedToUserId = adminUser.Id,
-                CreatedAt = DateTime.UtcNow.AddDays(-1)
+                CreatedByUserId = legacyUser.Id,
+                AssignedToUserId = receiverUser.Id,
+                CreatedAt = DateTime.UtcNow.AddDays(-1),
+                ProjectId = webProject.Id
             },
             new Ticket
             {
@@ -63,8 +122,9 @@ public static class DatabaseInitializer
                 Description = "Application is running slow when loading ticket list",
                 Priority = TicketPriority.Medium,
                 Status = TicketStatus.Open,
-                CreatedByUserId = regularUser.Id,
-                CreatedAt = DateTime.UtcNow.AddHours(-6)
+                CreatedByUserId = applierUser.Id,
+                CreatedAt = DateTime.UtcNow.AddHours(-6),
+                ProjectId = mobileProject.Id
             },
             new Ticket
             {
@@ -72,9 +132,10 @@ public static class DatabaseInitializer
                 Description = "Not receiving email notifications for ticket updates",
                 Priority = TicketPriority.Medium,
                 Status = TicketStatus.Resolved,
-                CreatedByUserId = regularUser.Id,
-                AssignedToUserId = adminUser.Id,
-                CreatedAt = DateTime.UtcNow.AddDays(-3)
+                CreatedByUserId = legacyUser.Id,
+                AssignedToUserId = receiverUser.Id,
+                CreatedAt = DateTime.UtcNow.AddDays(-3),
+                ProjectId = apiProject.Id
             },
             new Ticket
             {
@@ -82,8 +143,9 @@ public static class DatabaseInitializer
                 Description = "The ticket form could use better validation messages",
                 Priority = TicketPriority.Low,
                 Status = TicketStatus.Closed,
-                CreatedByUserId = regularUser.Id,
-                CreatedAt = DateTime.UtcNow.AddDays(-5)
+                CreatedByUserId = applierUser.Id,
+                CreatedAt = DateTime.UtcNow.AddDays(-5),
+                ProjectId = webProject.Id
             }
         };
 
