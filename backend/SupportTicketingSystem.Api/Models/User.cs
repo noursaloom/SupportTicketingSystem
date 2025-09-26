@@ -12,6 +12,7 @@ public class User
     // Navigation properties
     public virtual ICollection<Ticket> CreatedTickets { get; set; } = new List<Ticket>();
     public virtual ICollection<Ticket> AssignedTickets { get; set; } = new List<Ticket>();
+    public virtual ICollection<UserProject> UserProjects { get; set; } = new List<UserProject>();
 }
 
 public enum UserRole

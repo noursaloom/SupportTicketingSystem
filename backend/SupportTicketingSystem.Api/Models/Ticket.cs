@@ -12,10 +12,12 @@ public class Ticket
     // Foreign keys
     public int CreatedByUserId { get; set; }
     public int? AssignedToUserId { get; set; }
+    public int? ProjectId { get; set; }
     
     // Navigation properties
     public virtual User CreatedByUser { get; set; } = null!;
     public virtual User? AssignedToUser { get; set; }
+    public virtual Project? Project { get; set; }
 }
 
 public enum TicketPriority

@@ -43,6 +43,11 @@ import { User, UserRole } from './core/models/auth.models';
             Users
           </button>
           
+          <button mat-button routerLink="/projects" *ngIf="isAdmin">
+            <mat-icon>folder</mat-icon>
+            Projects
+          </button>
+          
           <button mat-icon-button [matMenuTriggerFor]="userMenu">
             <mat-icon>account_circle</mat-icon>
           </button>

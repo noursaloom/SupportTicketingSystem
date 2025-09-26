@@ -54,6 +54,44 @@ public static class DatabaseInitializer
         context.Users.AddRange(adminUser, applierUser, receiverUser, legacyUser);
         await context.SaveChangesAsync();
 
+        // Create demo projects
+        var webProject = new Project
+        {
+            Name = "Web Application",
+            Description = "Main web application development and maintenance",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var mobileProject = new Project
+        {
+            Name = "Mobile App",
+            Description = "Mobile application for iOS and Android platforms",
+            CreatedAt = DateTime.UtcNow.AddDays(-10)
+        };
+
+        var apiProject = new Project
+        {
+            Name = "API Services",
+            Description = "Backend API services and microservices",
+            CreatedAt = DateTime.UtcNow.AddDays(-5)
+        };
+
+        context.Projects.AddRange(webProject, mobileProject, apiProject);
+        await context.SaveChangesAsync();
+
+        // Assign users to projects
+        var userProjects = new[]
+        {
+            new UserProject { UserId = applierUser.Id, ProjectId = webProject.Id, AssignedAt = DateTime.UtcNow },
+            new UserProject { UserId = receiverUser.Id, ProjectId = webProject.Id, AssignedAt = DateTime.UtcNow },
+            new UserProject { UserId = legacyUser.Id, ProjectId = webProject.Id, AssignedAt = DateTime.UtcNow },
+            new UserProject { UserId = applierUser.Id, ProjectId = mobileProject.Id, AssignedAt = DateTime.UtcNow },
+            new UserProject { UserId = receiverUser.Id, ProjectId = apiProject.Id, AssignedAt = DateTime.UtcNow }
+        };
+
+        context.UserProjects.AddRange(userProjects);
+        await context.SaveChangesAsync();
+
         // Create demo tickets
         var tickets = new[]
         {
@@ -64,7 +102,8 @@ public static class DatabaseInitializer
                 Priority = TicketPriority.High,
                 Status = TicketStatus.Open,
                 CreatedByUserId = applierUser.Id,
-                CreatedAt = DateTime.UtcNow.AddDays(-2)
+                CreatedAt = DateTime.UtcNow.AddDays(-2),
+                ProjectId = webProject.Id
             },
             new Ticket
             {
@@ -74,7 +113,8 @@ public static class DatabaseInitializer
                 Status = TicketStatus.Pending,
                 CreatedByUserId = legacyUser.Id,
                 AssignedToUserId = receiverUser.Id,
-                CreatedAt = DateTime.UtcNow.AddDays(-1)
+                CreatedAt = DateTime.UtcNow.AddDays(-1),
+                ProjectId = webProject.Id
             },
             new Ticket
             {
@@ -83,7 +123,8 @@ public static class DatabaseInitializer
                 Priority = TicketPriority.Medium,
                 Status = TicketStatus.Open,
                 CreatedByUserId = applierUser.Id,
-                CreatedAt = DateTime.UtcNow.AddHours(-6)
+                CreatedAt = DateTime.UtcNow.AddHours(-6),
+                ProjectId = mobileProject.Id
             },
             new Ticket
             {
@@ -93,7 +134,8 @@ public static class DatabaseInitializer
                 Status = TicketStatus.Resolved,
                 CreatedByUserId = legacyUser.Id,
                 AssignedToUserId = receiverUser.Id,
-                CreatedAt = DateTime.UtcNow.AddDays(-3)
+                CreatedAt = DateTime.UtcNow.AddDays(-3),
+                ProjectId = apiProject.Id
             },
             new Ticket
             {
@@ -102,7 +144,8 @@ public static class DatabaseInitializer
                 Priority = TicketPriority.Low,
                 Status = TicketStatus.Closed,
                 CreatedByUserId = applierUser.Id,
-                CreatedAt = DateTime.UtcNow.AddDays(-5)
+                CreatedAt = DateTime.UtcNow.AddDays(-5),
+                ProjectId = webProject.Id
             }
         };
 
