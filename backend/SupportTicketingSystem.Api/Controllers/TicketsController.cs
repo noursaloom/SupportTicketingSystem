@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SupportTicketingSystem.Api.Data;
 using SupportTicketingSystem.Api.Models;
 using SupportTicketingSystem.Api.Models.DTOs;
 using SupportTicketingSystem.Api.Services;
@@ -13,10 +15,12 @@ namespace SupportTicketingSystem.Api.Controllers;
 public class TicketsController : ControllerBase
 {
     private readonly ITicketService _ticketService;
+    private readonly INotificationService _notificationService;
 
-    public TicketsController(ITicketService ticketService)
+    public TicketsController(ITicketService ticketService, INotificationService notificationService)
     {
         _ticketService = ticketService;
+        _notificationService = notificationService;
     }
 
     [HttpGet]
@@ -51,6 +55,9 @@ public class TicketsController : ControllerBase
             var userId = GetUserId();
             var ticket = await _ticketService.CreateTicketAsync(createTicketDto, userId);
             
+            // Create notification for ticket receivers and admins
+            await _notificationService.CreateTicketCreatedNotificationAsync(await GetFullTicketAsync(ticket.Id));
+            
             return CreatedAtAction(nameof(GetTicket), new { id = ticket.Id }, ticket);
         }
         catch (Exception ex)
@@ -67,7 +74,20 @@ public class TicketsController : ControllerBase
             var userId = GetUserId();
             var isAdminOrReceiver = IsAdminOrReceiver();
             
+            // Get the old ticket for comparison
+            var oldTicket = await _ticketService.GetTicketByIdAsync(id, userId, isAdminOrReceiver);
+            if (oldTicket == null)
+                return NotFound();
+                
             var ticket = await _ticketService.UpdateTicketAsync(id, updateTicketDto, userId, isAdminOrReceiver);
+            
+            // Create notifications for status changes
+            if (oldTicket.Status != ticket.Status)
+            {
+                await _notificationService.CreateTicketStatusChangedNotificationAsync(
+                    await GetFullTicketAsync(ticket.Id), oldTicket.Status);
+            }
+            
             return Ok(ticket);
         }
         catch (InvalidOperationException ex)
@@ -107,7 +127,16 @@ public class TicketsController : ControllerBase
     {
         try
         {
+            var oldTicket = await _ticketService.GetTicketByIdAsync(id, 0, true);
+            if (oldTicket == null)
+                return BadRequest(new { message = "Ticket not found" });
+                
             var ticket = await _ticketService.AssignTicketAsync(id, assignTicketDto);
+            
+            // Create notification for newly assigned user
+            await _notificationService.CreateTicketAssignedNotificationAsync(
+                await GetFullTicketAsync(ticket.Id), oldTicket.AssignedToUser?.Id);
+                
             return Ok(ticket);
         }
         catch (InvalidOperationException ex)
@@ -132,5 +161,18 @@ public class TicketsController : ControllerBase
     {
         var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
         return roleClaim == UserRole.Admin.ToString() || roleClaim == UserRole.TicketReceiver.ToString();
+    }
+    
+    private async Task<Ticket> GetFullTicketAsync(int ticketId)
+    {
+        // This is a helper method to get the full ticket entity for notifications
+        // We need to access the context directly here
+        using var scope = HttpContext.RequestServices.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        
+        return await context.Tickets
+            .Include(t => t.CreatedByUser)
+            .Include(t => t.AssignedToUser)
+            .FirstOrDefaultAsync(t => t.Id == ticketId) ?? throw new InvalidOperationException("Ticket not found");
     }
 }
