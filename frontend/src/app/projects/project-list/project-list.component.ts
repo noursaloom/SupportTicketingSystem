@@ -14,6 +14,7 @@ import { ProjectService } from '../../core/services/project.service';
 import { Project } from '../../core/models/project.models';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { ProjectFormDialogComponent } from '../project-form-dialog/project-form-dialog.component';
+import { User } from '../../core/models/auth.models';
 
 @Component({
   selector: 'app-project-list',
@@ -70,12 +71,11 @@ import { ProjectFormDialogComponent } from '../project-form-dialog/project-form-
                 <td mat-cell *matCellDef="let project">
                   <div class="assigned-users">
                     <mat-chip-set *ngIf="project.assignedUsers.length > 0">
-                      <mat-chip 
-                        *ngFor="let user of project.assignedUsers | slice:0:3" 
-                        class="user-chip"
-                        [matTooltip]="user.email">
-                        {{ user.name }}
-                      </mat-chip>
+              <mat-chip *ngFor="let user of project.assignedUsers ?? []" 
+          class="user-chip"
+          [matTooltip]="user?.email">
+  {{ user?.name }}
+</mat-chip>
                       <mat-chip 
                         *ngIf="project.assignedUsers.length > 3"
                         class="more-users-chip"
@@ -220,19 +220,22 @@ export class ProjectListComponent implements OnInit {
     this.loadProjects();
   }
 
-  loadProjects(): void {
-    this.projectService.getProjects().subscribe({
-      next: (projects) => {
-        this.projects = projects;
-        this.loading = false;
-      },
-      error: (error) => {
-        this.loading = false;
-        const message = error.error?.message || 'Failed to load projects';
-        this.snackBar.open(message, 'Close', { duration: 5000 });
-      }
-    });
-  }
+loadProjects(): void {
+  this.projectService.getProjects().subscribe({
+    next: (projects: Project[]) => { 
+      this.projects = projects.map(p => ({
+        ...p,
+        assignedUsers: p.assignedUsers || []
+      }));
+      this.loading = false;
+    },
+    error: (err: any) => { 
+      this.loading = false;
+      const message = err.error?.message || 'Failed to load projects';
+      this.snackBar.open(message, 'Close', { duration: 5000 });
+    }
+  });
+}
 
   openCreateProjectDialog(): void {
     const dialogRef = this.dialog.open(ProjectFormDialogComponent, {
@@ -289,8 +292,8 @@ export class ProjectListComponent implements OnInit {
     });
   }
 
-  getMoreUsersTooltip(users: any[]): string {
-    const remainingUsers = users.slice(3);
-    return remainingUsers.map(user => `${user.name} (${user.email})`).join('\n');
-  }
+ getMoreUsersTooltip(users: User[]): string {
+  const remainingUsers = users.slice(3);
+  return remainingUsers.map(user => `${user.name} (${user.email})`).join('\n');
+}
 }

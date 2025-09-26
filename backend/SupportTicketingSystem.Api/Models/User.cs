@@ -19,5 +19,6 @@ public enum UserRole
 {
     TicketApplier = 0,
     TicketReceiver = 1,
-    Admin = 2
-}
+    Admin = 2,
+    User=3
+    }

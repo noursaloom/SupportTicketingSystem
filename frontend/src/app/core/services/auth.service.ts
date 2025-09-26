@@ -8,7 +8,8 @@ import {
   RegisterRequest, 
   AuthResponse,
   CreateUserRequest,
-  UpdateUserRequest
+  UpdateUserRequest,
+  UserRole
 } from '../models/auth.models';
 
 @Injectable({
