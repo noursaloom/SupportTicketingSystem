@@ -47,6 +47,11 @@ export const routes: Routes = [
     canActivate: [authGuard, adminGuard]
   },
   {
+    path: 'notifications',
+    loadComponent: () => import('./notifications/notification-center/notification-center.component').then(c => c.NotificationCenterComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: '**',
     redirectTo: '/tickets'
   }
