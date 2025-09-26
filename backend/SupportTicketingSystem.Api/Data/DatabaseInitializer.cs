@@ -7,6 +7,7 @@ public static class DatabaseInitializer
 {
     public static async Task InitializeAsync(ApplicationDbContext context)
     {
+        // Ensure database is created
         await context.Database.EnsureCreatedAsync();
 
         // Check if data already exists

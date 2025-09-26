@@ -7,6 +7,18 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Ensure database directory exists
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (connectionString != null && connectionString.Contains("Data Source="))
+{
+    var dbPath = connectionString.Replace("Data Source=", "").Split(';')[0];
+    var dbDirectory = Path.GetDirectoryName(dbPath);
+    if (!string.IsNullOrEmpty(dbDirectory) && !Directory.Exists(dbDirectory))
+    {
+        Directory.CreateDirectory(dbDirectory);
+    }
+}
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -52,7 +64,15 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp",
         policy => policy
-            .WithOrigins("http://localhost:4200", "https://localhost:4200", "https://*.netlify.app", "https://*.vercel.app", "https://*.herokuapp.com")
+            .WithOrigins(
+                "http://localhost:4200", 
+                "https://localhost:4200", 
+                "https://*.netlify.app", 
+                "https://*.vercel.app", 
+                "https://*.herokuapp.com",
+                "https://*.azurestaticapps.net",
+                "https://*.azurewebsites.net"
+            )
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials());
