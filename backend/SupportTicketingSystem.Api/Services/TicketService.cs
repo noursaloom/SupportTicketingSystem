@@ -8,12 +8,10 @@ namespace SupportTicketingSystem.Api.Services;
 public class TicketService : ITicketService
 {
     private readonly ApplicationDbContext _context;
-    private readonly INotificationService _notificationService;
 
-    public TicketService(ApplicationDbContext context, INotificationService notificationService)
+    public TicketService(ApplicationDbContext context)
     {
         _context = context;
-        _notificationService = notificationService;
     }
 
     public async Task<IEnumerable<TicketDto>> GetTicketsAsync(int userId, bool isAdmin)
@@ -67,9 +65,6 @@ public class TicketService : ITicketService
         _context.Tickets.Add(ticket);
         await _context.SaveChangesAsync();
 
-        // Create notification for ticket receivers and admins
-        await _notificationService.CreateTicketCreatedNotificationAsync(ticket);
-
         await _context.Entry(ticket)
             .Reference(t => t.CreatedByUser)
             .LoadAsync();
@@ -99,12 +94,6 @@ public class TicketService : ITicketService
         ticket.Status = updateTicketDto.Status;
 
         await _context.SaveChangesAsync();
-
-        // Create notifications for status changes
-        if (oldStatus != ticket.Status)
-        {
-            await _notificationService.CreateTicketStatusChangedNotificationAsync(ticket, oldStatus);
-        }
 
         return MapToTicketDto(ticket);
     }
@@ -141,9 +130,6 @@ public class TicketService : ITicketService
         var oldAssigneeId = ticket.AssignedToUserId;
         ticket.AssignedToUserId = assignTicketDto.UserId;
         await _context.SaveChangesAsync();
-
-        // Create notification for newly assigned user
-        await _notificationService.CreateTicketAssignedNotificationAsync(ticket, oldAssigneeId);
 
         await _context.Entry(ticket)
             .Reference(t => t.AssignedToUser)
