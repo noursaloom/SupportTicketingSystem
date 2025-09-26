@@ -8,10 +8,12 @@ namespace SupportTicketingSystem.Api.Services;
 public class TicketService : ITicketService
 {
     private readonly ApplicationDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public TicketService(ApplicationDbContext context)
+    public TicketService(ApplicationDbContext context, INotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     public async Task<IEnumerable<TicketDto>> GetTicketsAsync(int userId, bool isAdmin)
@@ -69,6 +71,9 @@ public class TicketService : ITicketService
             .Reference(t => t.CreatedByUser)
             .LoadAsync();
 
+        // Create notification for ticket receivers and admins
+        await _notificationService.CreateTicketCreatedNotificationAsync(ticket);
+
         return MapToTicketDto(ticket);
     }
 
@@ -82,11 +87,11 @@ public class TicketService : ITicketService
         if (ticket == null)
             throw new InvalidOperationException("Ticket not found");
 
-        if (!isAdmin && ticket.CreatedByUserId != userId)
+        var user = await _context.Users.FindAsync(userId);
+        if (user?.Role == UserRole.TicketApplier && ticket.CreatedByUserId != userId)
             throw new UnauthorizedAccessException("Not authorized to update this ticket");
 
         var oldStatus = ticket.Status;
-        var oldAssigneeId = ticket.AssignedToUserId;
 
         ticket.Title = updateTicketDto.Title;
         ticket.Description = updateTicketDto.Description;
@@ -94,6 +99,12 @@ public class TicketService : ITicketService
         ticket.Status = (TicketStatus)updateTicketDto.Status;
 
         await _context.SaveChangesAsync();
+
+        // Create notifications for status changes
+        if (oldStatus != ticket.Status)
+        {
+            await _notificationService.CreateTicketStatusChangedNotificationAsync(ticket, oldStatus);
+        }
 
         return MapToTicketDto(ticket);
     }
@@ -105,7 +116,8 @@ public class TicketService : ITicketService
         if (ticket == null)
             return false;
 
-        if (!isAdmin && ticket.CreatedByUserId != userId)
+        var user = await _context.Users.FindAsync(userId);
+        if (user?.Role == UserRole.TicketApplier && ticket.CreatedByUserId != userId)
             throw new UnauthorizedAccessException("Not authorized to delete this ticket");
 
         _context.Tickets.Remove(ticket);
@@ -134,6 +146,9 @@ public class TicketService : ITicketService
         await _context.Entry(ticket)
             .Reference(t => t.AssignedToUser)
             .LoadAsync();
+
+        // Create notification for newly assigned user
+        await _notificationService.CreateTicketAssignedNotificationAsync(ticket, oldAssigneeId);
 
         return MapToTicketDto(ticket);
     }

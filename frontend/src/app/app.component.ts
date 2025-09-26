@@ -130,6 +130,11 @@ export class AppComponent implements OnInit {
       this.currentUser = user;
     });
 
+    // Subscribe to unread notifications count
+    this.notificationService.unreadCount$.subscribe(count => {
+      this.unreadCount = count;
+    });
+
   // Hide toolbar on auth pages
   this.router.events.pipe(
     filter(event => event instanceof NavigationEnd)
