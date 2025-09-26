@@ -1,6 +1,6 @@
 # Simple Support Ticketing System - MVP
 
-A full-stack support ticketing system built with Angular and .NET 8, featuring JWT authentication and role-based access control.
+A full-stack support ticketing system built with Angular and .NET 8, featuring JWT authentication, role-based access control, project management, and real-time notifications.
 
 ## Tech Stack
 
@@ -25,14 +25,23 @@ A full-stack support ticketing system built with Angular and .NET 8, featuring J
 - Users can only manage their own tickets
 
 ### User Management (Admin only)
-- View all users with their roles
-- Create new users with role assignment
-- Edit user information and roles
-- Delete users (with validation for users who have created tickets)
-- Three role types:
-  - **Ticket Applier**: Can create and manage their own tickets
-  - **Ticket Receiver**: Can view all tickets and assign them to users
-  - **Admin**: Full system access including user management
+- Complete user management interface
+- Create, edit, and delete users
+- Role-based permissions (Ticket Applier, Ticket Receiver, Admin)
+- User assignment to projects
+
+### Project Management (Admin only)
+- Create and manage projects
+- Assign multiple users to projects
+- Associate tickets with projects
+- Project-based organization
+
+### Notification System
+- Real-time notifications for ticket activities
+- Notification types: Created, Assigned, Status Changed
+- Unread notification counter in header
+- Mark notifications as read
+- Auto-polling for new notifications
 
 ## Demo Accounts
 
@@ -59,6 +68,17 @@ A full-stack support ticketing system built with Angular and .NET 8, featuring J
 ```
 
 ## Getting Started
+
+### Quick Start with Docker
+
+1. Clone the repository
+2. Run with Docker Compose:
+   ```bash
+   docker-compose up -d
+   ```
+3. Access the application:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:5000
 
 ### Prerequisites
 
@@ -117,6 +137,45 @@ cd backend
 dotnet test
 ```
 
+## Deployment Options
+
+### 1. Docker Deployment (Recommended)
+
+The easiest way to deploy is using Docker:
+
+```bash
+# Build and run with Docker Compose
+docker-compose up -d
+
+# Or build individual containers
+docker build -t ticketing-backend ./backend
+docker build -t ticketing-frontend ./frontend
+```
+
+### 2. Cloud Deployment
+
+#### Heroku
+1. Create two Heroku apps (backend and frontend)
+2. Set environment variables in Heroku dashboard
+3. Deploy using Heroku CLI or GitHub integration
+
+#### Netlify (Frontend) + Railway/Render (Backend)
+1. Deploy frontend to Netlify
+2. Deploy backend to Railway or Render
+3. Update environment variables with production URLs
+
+#### Azure/AWS
+1. Use Azure App Service or AWS Elastic Beanstalk
+2. Configure environment variables
+3. Set up database (Azure SQL or RDS)
+
+### 3. Environment Configuration
+
+Update these files for production:
+- `frontend/src/environments/environment.prod.ts` - Set production API URL
+- `backend/appsettings.Production.json` - Configure production settings
+- Update CORS origins in `Program.cs`
+
 ## API Endpoints
 
 ### Authentication
@@ -136,6 +195,18 @@ dotnet test
 - `POST /api/users` - Create new user
 - `PUT /api/users/{id}` - Update user
 - `DELETE /api/users/{id}` - Delete user
+
+### Projects (Admin only)
+- `GET /api/projects` - Get all projects
+- `POST /api/projects` - Create new project
+- `PUT /api/projects/{id}` - Update project
+- `DELETE /api/projects/{id}` - Delete project
+- `POST /api/projects/{id}/assign-users` - Assign users to project
+
+### Notifications
+- `GET /api/notifications` - Get user notifications
+- `GET /api/notifications/unread-count` - Get unread count
+- `PUT /api/notifications/{id}/read` - Mark as read
 
 ## Development Notes
 
@@ -157,12 +228,15 @@ The application uses the following configuration (in `appsettings.json`):
 
 ### Future Enhancements
 
-- PostgreSQL support (connection string change)
+- PostgreSQL/MySQL support
 - Email notifications
 - File attachments
-- Real-time updates
+- WebSocket real-time updates
 - Advanced filtering and search
 - Audit logging
+- Mobile app
+- API rate limiting
+- Advanced reporting
 
 ## Troubleshooting
 
