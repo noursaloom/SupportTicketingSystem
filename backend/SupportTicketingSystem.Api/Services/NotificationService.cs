@@ -18,11 +18,9 @@ public class NotificationService : INotificationService
     {
         var notifications = await _context.Notifications
             .Include(n => n.Ticket)
-            .ThenInclude(t => t.CreatedByUser)
+                .ThenInclude(t => t.CreatedByUser)
             .Include(n => n.Ticket)
-            .ThenInclude(t => t.AssignedToUser)
-            .Include(n => n.Ticket)
-            .ThenInclude(t => t.Project)
+                .ThenInclude(t => t.AssignedToUser)
             .Where(n => n.UserId == userId)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
@@ -40,11 +38,9 @@ public class NotificationService : INotificationService
     {
         var notification = await _context.Notifications
             .Include(n => n.Ticket)
-            .ThenInclude(t => t.CreatedByUser)
+                .ThenInclude(t => t.CreatedByUser)
             .Include(n => n.Ticket)
-            .ThenInclude(t => t.AssignedToUser)
-            .Include(n => n.Ticket)
-            .ThenInclude(t => t.Project)
+                .ThenInclude(t => t.AssignedToUser)
             .FirstOrDefaultAsync(n => n.Id == notificationId && n.UserId == userId);
 
         if (notification == null)
@@ -80,20 +76,17 @@ public class NotificationService : INotificationService
     public async Task CreateTicketStatusChangedNotificationAsync(Ticket ticket, TicketStatus oldStatus)
     {
         // Notify the ticket creator about status changes
-        if (ticket.CreatedByUserId != null)
+        var notification = new Notification
         {
-            var notification = new Notification
-            {
-                UserId = ticket.CreatedByUserId,
-                TicketId = ticket.Id,
-                Type = NotificationType.TicketStatusChanged,
-                Message = $"Ticket status changed from {GetStatusLabel(oldStatus)} to {GetStatusLabel(ticket.Status)}: {ticket.Title}",
-                CreatedAt = DateTime.UtcNow
-            };
+            UserId = ticket.CreatedByUserId,
+            TicketId = ticket.Id,
+            Type = NotificationType.TicketStatusChanged,
+            Message = $"Ticket status changed from {GetStatusLabel(oldStatus)} to {GetStatusLabel(ticket.Status)}: {ticket.Title}",
+            CreatedAt = DateTime.UtcNow
+        };
 
-            _context.Notifications.Add(notification);
-            await _context.SaveChangesAsync();
-        }
+        _context.Notifications.Add(notification);
+        await _context.SaveChangesAsync();
     }
 
     public async Task CreateTicketAssignedNotificationAsync(Ticket ticket, int? oldAssigneeId)
