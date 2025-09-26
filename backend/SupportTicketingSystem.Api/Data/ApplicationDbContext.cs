@@ -14,6 +14,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Project> Projects { get; set; }
     public DbSet<UserProject> UserProjects { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -82,6 +83,26 @@ public class ApplicationDbContext : DbContext
 
             // Ensure unique user-project combinations
             entity.HasIndex(e => new { e.UserId, e.ProjectId }).IsUnique();
+        });
+
+        // Notification configuration
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Message).IsRequired();
+            entity.Property(e => e.Type).HasConversion<int>();
+
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Ticket)
+                  .WithMany()
+                  .HasForeignKey(e => e.TicketId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.UserId, e.IsRead });
         });
 
         // Notification configuration
