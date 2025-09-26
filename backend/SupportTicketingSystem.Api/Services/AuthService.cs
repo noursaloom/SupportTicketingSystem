@@ -34,7 +34,7 @@ public class AuthService : IAuthService
             Name = registerDto.Name,
             Email = registerDto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
-            Role = UserRole.User,
+            Role = UserRole.TicketApplier,
             CreatedAt = DateTime.UtcNow
         };
 

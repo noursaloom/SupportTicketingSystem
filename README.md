@@ -25,15 +25,21 @@ A full-stack support ticketing system built with Angular and .NET 8, featuring J
 - Users can only manage their own tickets
 
 ### User Management (Admin only)
-- View all users
-- Create new users
-- Edit user information
-- Delete users
+- View all users with their roles
+- Create new users with role assignment
+- Edit user information and roles
+- Delete users (with validation for users who have created tickets)
+- Three role types:
+  - **Ticket Applier**: Can create and manage their own tickets
+  - **Ticket Receiver**: Can view all tickets and assign them to users
+  - **Admin**: Full system access including user management
 
 ## Demo Accounts
 
-- **Admin**: admin@demo.com / password
-- **User**: user@demo.com / password
+- **Admin**: admin@demo.com / password (Full access to all features)
+- **Ticket Applier**: applier@demo.com / password (Can create and manage own tickets)
+- **Ticket Receiver**: receiver@demo.com / password (Can view all tickets and assign them)
+- **Legacy User**: user@demo.com / password (Ticket Applier role for backward compatibility)
 
 ## Project Structure
 

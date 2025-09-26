@@ -23,9 +23,9 @@ public class TicketsController : ControllerBase
     public async Task<ActionResult<IEnumerable<TicketDto>>> GetTickets()
     {
         var userId = GetUserId();
-        var isAdmin = IsAdmin();
+        var isAdminOrReceiver = IsAdminOrReceiver();
         
-        var tickets = await _ticketService.GetTicketsAsync(userId, isAdmin);
+        var tickets = await _ticketService.GetTicketsAsync(userId, isAdminOrReceiver);
         return Ok(tickets);
     }
 
@@ -33,9 +33,9 @@ public class TicketsController : ControllerBase
     public async Task<ActionResult<TicketDto>> GetTicket(int id)
     {
         var userId = GetUserId();
-        var isAdmin = IsAdmin();
+        var isAdminOrReceiver = IsAdminOrReceiver();
         
-        var ticket = await _ticketService.GetTicketByIdAsync(id, userId, isAdmin);
+        var ticket = await _ticketService.GetTicketByIdAsync(id, userId, isAdminOrReceiver);
         
         if (ticket == null)
             return NotFound();
@@ -65,9 +65,9 @@ public class TicketsController : ControllerBase
         try
         {
             var userId = GetUserId();
-            var isAdmin = IsAdmin();
+            var isAdminOrReceiver = IsAdminOrReceiver();
             
-            var ticket = await _ticketService.UpdateTicketAsync(id, updateTicketDto, userId, isAdmin);
+            var ticket = await _ticketService.UpdateTicketAsync(id, updateTicketDto, userId, isAdminOrReceiver);
             return Ok(ticket);
         }
         catch (InvalidOperationException ex)
@@ -86,9 +86,9 @@ public class TicketsController : ControllerBase
         try
         {
             var userId = GetUserId();
-            var isAdmin = IsAdmin();
+            var isAdminOrReceiver = IsAdminOrReceiver();
             
-            var deleted = await _ticketService.DeleteTicketAsync(id, userId, isAdmin);
+            var deleted = await _ticketService.DeleteTicketAsync(id, userId, isAdminOrReceiver);
             
             if (!deleted)
                 return NotFound();
@@ -102,7 +102,7 @@ public class TicketsController : ControllerBase
     }
 
     [HttpPost("{id}/assign")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,TicketReceiver")]
     public async Task<ActionResult<TicketDto>> AssignTicket(int id, [FromBody] AssignTicketDto assignTicketDto)
     {
         try
@@ -126,5 +126,11 @@ public class TicketsController : ControllerBase
     {
         var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
         return roleClaim == UserRole.Admin.ToString();
+    }
+    
+    private bool IsAdminOrReceiver()
+    {
+        var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+        return roleClaim == UserRole.Admin.ToString() || roleClaim == UserRole.TicketReceiver.ToString();
     }
 }

@@ -26,4 +26,12 @@ public class UserDto
     public string Email { get; set; } = string.Empty;
     public UserRole Role { get; set; }
     public DateTime CreatedAt { get; set; }
+    
+    public string RoleDisplayName => Role switch
+    {
+        UserRole.TicketApplier => "Ticket Applier",
+        UserRole.TicketReceiver => "Ticket Receiver",
+        UserRole.Admin => "Admin",
+        _ => "Unknown"
+    };
 }

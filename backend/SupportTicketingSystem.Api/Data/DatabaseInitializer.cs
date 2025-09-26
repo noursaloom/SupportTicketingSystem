@@ -23,16 +23,35 @@ public static class DatabaseInitializer
             CreatedAt = DateTime.UtcNow
         };
 
-        var regularUser = new User
+        var applierUser = new User
         {
-            Name = "Regular User",
-            Email = "user@demo.com",
+            Name = "Ticket Applier",
+            Email = "applier@demo.com",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("password"),
-            Role = UserRole.User,
+            Role = UserRole.TicketApplier,
             CreatedAt = DateTime.UtcNow
         };
 
-        context.Users.AddRange(adminUser, regularUser);
+        var receiverUser = new User
+        {
+            Name = "Ticket Receiver",
+            Email = "receiver@demo.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password"),
+            Role = UserRole.TicketReceiver,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        // Keep legacy user for backward compatibility
+        var legacyUser = new User
+        {
+            Name = "Legacy User",
+            Email = "user@demo.com",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password"),
+            Role = UserRole.TicketApplier,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        context.Users.AddRange(adminUser, applierUser, receiverUser, legacyUser);
         await context.SaveChangesAsync();
 
         // Create demo tickets
@@ -44,7 +63,7 @@ public static class DatabaseInitializer
                 Description = "Cannot login to the system with correct credentials",
                 Priority = TicketPriority.High,
                 Status = TicketStatus.Open,
-                CreatedByUserId = regularUser.Id,
+                CreatedByUserId = applierUser.Id,
                 CreatedAt = DateTime.UtcNow.AddDays(-2)
             },
             new Ticket
@@ -53,8 +72,8 @@ public static class DatabaseInitializer
                 Description = "Please add dark mode theme option to the application",
                 Priority = TicketPriority.Low,
                 Status = TicketStatus.Pending,
-                CreatedByUserId = regularUser.Id,
-                AssignedToUserId = adminUser.Id,
+                CreatedByUserId = legacyUser.Id,
+                AssignedToUserId = receiverUser.Id,
                 CreatedAt = DateTime.UtcNow.AddDays(-1)
             },
             new Ticket
@@ -63,7 +82,7 @@ public static class DatabaseInitializer
                 Description = "Application is running slow when loading ticket list",
                 Priority = TicketPriority.Medium,
                 Status = TicketStatus.Open,
-                CreatedByUserId = regularUser.Id,
+                CreatedByUserId = applierUser.Id,
                 CreatedAt = DateTime.UtcNow.AddHours(-6)
             },
             new Ticket
@@ -72,8 +91,8 @@ public static class DatabaseInitializer
                 Description = "Not receiving email notifications for ticket updates",
                 Priority = TicketPriority.Medium,
                 Status = TicketStatus.Resolved,
-                CreatedByUserId = regularUser.Id,
-                AssignedToUserId = adminUser.Id,
+                CreatedByUserId = legacyUser.Id,
+                AssignedToUserId = receiverUser.Id,
                 CreatedAt = DateTime.UtcNow.AddDays(-3)
             },
             new Ticket
@@ -82,7 +101,7 @@ public static class DatabaseInitializer
                 Description = "The ticket form could use better validation messages",
                 Priority = TicketPriority.Low,
                 Status = TicketStatus.Closed,
-                CreatedByUserId = regularUser.Id,
+                CreatedByUserId = applierUser.Id,
                 CreatedAt = DateTime.UtcNow.AddDays(-5)
             }
         };

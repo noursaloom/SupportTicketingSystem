@@ -125,7 +125,7 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dial
         </mat-card>
 
         <!-- Admin Assignment Section -->
-        <mat-card class="assignment-card" *ngIf="isAdmin">
+        <mat-card class="assignment-card" *ngIf="isAdminOrReceiver">
           <mat-card-header>
             <mat-card-title>Assignment</mat-card-title>
             <mat-card-subtitle>Assign this ticket to a user</mat-card-subtitle>
@@ -255,7 +255,7 @@ export class TicketDetailComponent implements OnInit {
       this.loadTicket(ticketId);
     });
 
-    if (this.isAdmin) {
+    if (this.isAdminOrReceiver) {
       this.loadUsers();
     }
   }
@@ -343,17 +343,17 @@ export class TicketDetailComponent implements OnInit {
   canEditTicket(): boolean {
     if (!this.ticket) return false;
     const currentUser = this.authService.getCurrentUser();
-    return currentUser?.role === 1 || this.ticket.createdByUser.id === currentUser?.id;
+    return this.authService.isAdminOrReceiver() || this.ticket.createdByUser.id === currentUser?.id;
   }
 
   canDeleteTicket(): boolean {
     if (!this.ticket) return false;
     const currentUser = this.authService.getCurrentUser();
-    return currentUser?.role === 1 || this.ticket.createdByUser.id === currentUser?.id;
+    return this.authService.isAdminOrReceiver() || this.ticket.createdByUser.id === currentUser?.id;
   }
 
-  get isAdmin(): boolean {
-    return this.authService.isAdmin();
+  get isAdminOrReceiver(): boolean {
+    return this.authService.isAdminOrReceiver();
   }
 
   getStatusLabel(status: number): string {

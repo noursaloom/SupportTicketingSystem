@@ -21,7 +21,10 @@ public class TicketService : ITicketService
             .Include(t => t.AssignedToUser)
             .AsQueryable();
 
-        if (!isAdmin)
+        // TicketAppliers can only see their own tickets
+        // TicketReceivers and Admins can see all tickets
+        var user = await _context.Users.FindAsync(userId);
+        if (user?.Role == UserRole.TicketApplier)
         {
             query = query.Where(t => t.CreatedByUserId == userId);
         }
@@ -40,7 +43,8 @@ public class TicketService : ITicketService
         if (ticket == null)
             return null;
 
-        if (!isAdmin && ticket.CreatedByUserId != userId)
+        var user = await _context.Users.FindAsync(userId);
+        if (user?.Role == UserRole.TicketApplier && ticket.CreatedByUserId != userId)
             return null;
 
         return MapToTicketDto(ticket);

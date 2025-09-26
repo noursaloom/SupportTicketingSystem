@@ -10,7 +10,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 import { AuthService } from '../../core/services/auth.service';
-import { User, UserRole, CreateUserRequest, UpdateUserRequest } from '../../core/models/auth.models';
+import { User, UserRole, CreateUserRequest, UpdateUserRequest, USER_ROLE_LABELS } from '../../core/models/auth.models';
 
 @Component({
   selector: 'app-user-form-dialog',
@@ -63,7 +63,8 @@ import { User, UserRole, CreateUserRequest, UpdateUserRequest } from '../../core
         <mat-form-field class="full-width">
           <mat-label>Role</mat-label>
           <mat-select formControlName="role">
-            <mat-option [value]="UserRole.User">User</mat-option>
+            <mat-option [value]="UserRole.TicketApplier">{{ USER_ROLE_LABELS[UserRole.TicketApplier] }}</mat-option>
+            <mat-option [value]="UserRole.TicketReceiver">{{ USER_ROLE_LABELS[UserRole.TicketReceiver] }}</mat-option>
             <mat-option [value]="UserRole.Admin">Admin</mat-option>
           </mat-select>
         </mat-form-field>
@@ -96,6 +97,7 @@ export class UserFormDialogComponent {
   loading = false;
   isEditMode = false;
   UserRole = UserRole;
+  USER_ROLE_LABELS = USER_ROLE_LABELS;
 
   constructor(
     private fb: FormBuilder,
@@ -109,7 +111,7 @@ export class UserFormDialogComponent {
     this.userForm = this.fb.group({
       name: [data?.name || '', Validators.required],
       email: [data?.email || '', [Validators.required, Validators.email]],
-      role: [data?.role ?? UserRole.User, Validators.required]
+      role: [data?.role ?? UserRole.TicketApplier, Validators.required]
     });
 
     // Add password field for create mode only
