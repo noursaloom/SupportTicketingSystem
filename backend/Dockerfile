@@ -19,8 +19,11 @@ COPY --from=build /app/SupportTicketingSystem.Api/out .
 # Create directory for SQLite database
 RUN mkdir -p /app/data
 
+# Set environment variable for Render
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_URLS=http://+:10000
+
 # Expose port
-EXPOSE 80
-EXPOSE 443
+EXPOSE 10000
 
 ENTRYPOINT ["dotnet", "SupportTicketingSystem.Api.dll"]
