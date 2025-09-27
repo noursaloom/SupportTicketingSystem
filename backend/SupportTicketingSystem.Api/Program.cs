@@ -80,7 +80,8 @@ builder.Services.AddCors(options =>
                 "https://*.azurestaticapps.net",
                 "https://*.azurewebsites.net",
                 "https://*.railway.app",
-                "https://*.render.com"
+                "https://*.render.com",
+                "https://*.bolt.new"
             )
             .AllowAnyMethod()
             .AllowAnyHeader()
