@@ -299,7 +299,7 @@ export class AppComponent implements OnInit {
       filter(event => event instanceof NavigationEnd)
     ).subscribe(event => {
       const navEnd = event as NavigationEnd;  
-      this.showToolbar = !['/login', '/register'].includes(navEnd.url);
+      this.showToolbar = !['/login', '/register'].includes(navEnd.url.split('?')[0]);
     });
   }
 
