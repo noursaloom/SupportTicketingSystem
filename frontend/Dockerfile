@@ -2,26 +2,26 @@
 FROM node:18-alpine AS build
 WORKDIR /app
 
-# نسخ ملفات package
+# Copy package files
 COPY package*.json ./
 
-# تثبيت الباكج
-RUN npm install
+# Install dependencies
+RUN npm ci --only=production
 
-# نسخ باقي الكود وبناء المشروع
+# Copy source code and build
 COPY . .
-RUN npx ng build --configuration=production
+RUN npm run build --prod
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
-# نسخ البناء النهائي إلى مجلد nginx
+# Copy built app to nginx
 COPY --from=build /app/dist/support-ticketing-frontend /usr/share/nginx/html
 
-# نسخ إعدادات Nginx
-COPY default.conf /etc/nginx/conf.d/default.conf
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# فتح البورت
+# Expose port
 EXPOSE 80
 
-# بدء Nginx
+# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
