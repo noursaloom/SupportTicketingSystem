@@ -8,13 +8,11 @@ RUN npm install
 
 # Copy source code and build
 COPY . .
-RUN npm run build
+RUN npm run build --prod
 
 # Production stage
 FROM nginx:alpine
 COPY --from=build /app/dist/support-ticketing-frontend /usr/share/nginx/html
-
-# Copy nginx configuration
 COPY default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
