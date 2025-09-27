@@ -1,0 +1,20 @@
+# Koyeb configuration
+name: support-ticketing-system
+services:
+  - name: app
+    git:
+      branch: main
+      build_command: docker build -t app .
+      run_command: dotnet SupportTicketingSystem.Api.dll
+    instance_type: nano
+    ports:
+      - port: 80
+        protocol: http
+    env:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:80
+    regions:
+      - fra
+</koyeb.yaml>

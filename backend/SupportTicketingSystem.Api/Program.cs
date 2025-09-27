@@ -98,9 +98,17 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowAngularApp");
+
+// Serve static files (Angular frontend)
+app.UseStaticFiles();
+app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Fallback to index.html for Angular routing
+app.MapFallbackToFile("index.html");
 
 // Initialize database
 using (var scope = app.Services.CreateScope())
