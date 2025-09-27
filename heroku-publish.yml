@@ -1,0 +1,9 @@
+build:
+  docker:
+    web: Dockerfile
+release:
+  image: web
+  command:
+    - dotnet ef database update
+run:
+  web: dotnet SupportTicketingSystem.Api.dll
