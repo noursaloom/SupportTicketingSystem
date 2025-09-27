@@ -8,11 +8,13 @@ namespace SupportTicketingSystem.Api.Services;
 public class NotificationService : INotificationService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IEmailService _emailService;
     private readonly ILogger<NotificationService> _logger;
 
-    public NotificationService(ApplicationDbContext context, ILogger<NotificationService> logger)
+    public NotificationService(ApplicationDbContext context, IEmailService emailService, ILogger<NotificationService> logger)
         {
         _context = context;
+        _emailService = emailService;
         _logger = logger;
         }
 
@@ -95,10 +97,6 @@ public class NotificationService : INotificationService
 
         foreach (var user in receiversAndAdmins)
         {
-            var descriptionSummary = fullTicket.Description.Length > 100 
-                ? fullTicket.Description.Substring(0, 100) + "..." 
-                : fullTicket.Description;
-
             var message = fullTicket.Project != null
                 ? $"New {GetPriorityLabel(fullTicket.Priority)} priority ticket created in project '{fullTicket.Project.Name}': {fullTicket.Title}"
                 : $"New {GetPriorityLabel(fullTicket.Priority)} priority ticket created: {fullTicket.Title}";
@@ -111,6 +109,9 @@ public class NotificationService : INotificationService
                 Message = message,
                 CreatedAt = DateTime.UtcNow
             });
+
+            // Send email notification
+            await _emailService.SendTicketCreatedEmailAsync(fullTicket, user);
         }
 
         _context.Notifications.AddRange(notifications);
@@ -147,6 +148,9 @@ public class NotificationService : INotificationService
 
         _context.Notifications.Add(notification);
         await _context.SaveChangesAsync();
+
+        // Send email notification
+        await _emailService.SendTicketStatusChangedEmailAsync(fullTicket, oldStatus, fullTicket.CreatedByUser);
     }
 
     public async Task CreateTicketAssignedNotificationAsync(Ticket ticket, int? oldAssigneeId)
@@ -178,6 +182,9 @@ public class NotificationService : INotificationService
 
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
+
+            // Send email notification
+            await _emailService.SendTicketAssignedEmailAsync(fullTicket, fullTicket.AssignedToUser);
         }
     }
 

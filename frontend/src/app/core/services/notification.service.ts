@@ -39,7 +39,7 @@ export class NotificationService {
 
   private startPolling(): void {
     // Poll every 30 seconds, starting immediately
-    interval(30000).pipe(
+    interval(10000).pipe( // Reduced to 10 seconds for better real-time feel
       startWith(0),
       switchMap(() => this.getUnreadCount())
     ).subscribe({

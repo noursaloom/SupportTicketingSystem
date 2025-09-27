@@ -8,10 +8,12 @@ namespace SupportTicketingSystem.Api.Services;
 public class UserService : IUserService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IEmailService _emailService;
 
-    public UserService(ApplicationDbContext context)
+    public UserService(ApplicationDbContext context, IEmailService emailService)
     {
         _context = context;
+        _emailService = emailService;
     }
 
     public async Task<IEnumerable<UserDto>> GetUsersAsync()
@@ -33,17 +35,23 @@ public class UserService : IUserService
             throw new InvalidOperationException("User with this email already exists");
         }
 
+        // Generate temporary password
+        var temporaryPassword = GenerateTemporaryPassword();
+
         var user = new User
         {
             Name = createUserDto.Name,
             Email = createUserDto.Email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(createUserDto.Password),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(temporaryPassword),
             Role = createUserDto.Role,
             CreatedAt = DateTime.UtcNow
         };
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
+
+        // Send welcome email with temporary password
+        await _emailService.SendNewUserAccountEmailAsync(user, temporaryPassword);
 
         return MapToUserDto(user);
     }
@@ -85,6 +93,14 @@ public class UserService : IUserService
         _context.Users.Remove(user);
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    private static string GenerateTemporaryPassword()
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
+        var random = new Random();
+        return new string(Enumerable.Repeat(chars, 12)
+            .Select(s => s[random.Next(s.Length)]).ToArray());
     }
 
     private static UserDto MapToUserDto(User user)
