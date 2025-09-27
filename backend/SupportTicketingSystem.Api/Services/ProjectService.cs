@@ -8,10 +8,12 @@ namespace SupportTicketingSystem.Api.Services;
 public class ProjectService : IProjectService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IEmailService _emailService;
 
-    public ProjectService(ApplicationDbContext context)
+    public ProjectService(ApplicationDbContext context, IEmailService emailService)
     {
         _context = context;
+        _emailService = emailService;
     }
 
     public async Task<IEnumerable<ProjectDto>> GetProjectsAsync()
@@ -116,6 +118,33 @@ public class ProjectService : IProjectService
                     ProjectId = project.Id,
                     AssignedAt = DateTime.UtcNow
                 });
+
+                // Send email notification for new project assignment
+                var currentUser = await _context.Users.FirstAsync(); // In real app, get from auth context
+                await _emailService.SendUserAddedToProjectEmailAsync(project, user, currentUser);
+            }
+        }
+
+        await _context.SaveChangesAsync();
+        return MapToProjectDto(project);
+    }
+
+    private async Task AssignUsersToProject(int projectId, List<int> userIds)
+    {
+        var project = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        if (project == null) return;
+
+        foreach (var userId in userIds)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user != null)
+            {
+                project.UserProjects.Add(new UserProject
+                {
+                    UserId = userId,
+                    ProjectId = project.Id,
+                    AssignedAt = DateTime.UtcNow
+                });
             }
         }
 
@@ -184,6 +213,10 @@ public class ProjectService : IProjectService
                         AssignedAt = DateTime.UtcNow
                     });
                 }
+
+                // Send email notification for new project assignment
+                var currentUser = await _context.Users.FirstAsync(); // In real app, get from auth context
+                await _emailService.SendUserAddedToProjectEmailAsync(project, user, currentUser);
             }
         }
 
