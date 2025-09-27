@@ -48,3 +48,6 @@ out/
 # Others
 .vscode/
 .vs/
+*.db
+*.db-shm
+*.db-wal
