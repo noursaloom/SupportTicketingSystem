@@ -69,7 +69,7 @@ import { Notification, NotificationType } from '../../core/models/notification.m
                 </div>
                 
                 <div class="notification-meta">
-                  <span class="ticket-title">{{ notification.ticket.title }}</span>
+                  <span class="ticket-title">{{ notification.ticket?.title || 'Ticket' }}</span>
                   <span class="notification-time">{{ notification.createdAt | date:'short' }}</span>
                 </div>
               </div>

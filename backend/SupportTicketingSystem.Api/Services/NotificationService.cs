@@ -107,13 +107,8 @@ public class NotificationService : INotificationService
             {
                 UserId = user.Id,
                 TicketId = fullTicket.Id,
-                ProjectId = fullTicket.ProjectId,
                 Type = NotificationType.TicketCreated,
                 Message = message,
-                TicketTitle = fullTicket.Title,
-                ProjectName = fullTicket.Project?.Name,
-                CreatorName = fullTicket.CreatedByUser.Name,
-                DescriptionSummary = descriptionSummary,
                 CreatedAt = DateTime.UtcNow
             });
         }
@@ -145,11 +140,8 @@ public class NotificationService : INotificationService
         {
             UserId = fullTicket.CreatedByUserId,
             TicketId = fullTicket.Id,
-            ProjectId = fullTicket.ProjectId,
             Type = NotificationType.TicketStatusChanged,
             Message = message,
-            TicketTitle = fullTicket.Title,
-            ProjectName = fullTicket.Project?.Name,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -179,12 +171,8 @@ public class NotificationService : INotificationService
             {
                 UserId = fullTicket.AssignedToUserId.Value,
                 TicketId = fullTicket.Id,
-                ProjectId = fullTicket.ProjectId,
                 Type = NotificationType.TicketAssigned,
                 Message = message,
-                TicketTitle = fullTicket.Title,
-                ProjectName = fullTicket.Project?.Name,
-                CreatorName = fullTicket.CreatedByUser.Name,
                 CreatedAt = DateTime.UtcNow
             };
 
