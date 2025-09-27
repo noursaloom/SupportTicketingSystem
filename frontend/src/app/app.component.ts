@@ -53,6 +53,22 @@ import { MatDividerModule } from '@angular/material/divider';
             Projects
           </button>
           
+          <button mat-button [matMenuTriggerFor]="adminMenu" *ngIf="isAdmin">
+            <mat-icon>admin_panel_settings</mat-icon>
+            Admin
+          </button>
+          
+          <mat-menu #adminMenu="matMenu">
+            <button mat-menu-item routerLink="/admin/users">
+              <mat-icon>people</mat-icon>
+              User Management
+            </button>
+            <button mat-menu-item routerLink="/admin/projects">
+              <mat-icon>folder</mat-icon>
+              Project Management
+            </button>
+          </mat-menu>
+          
           <button mat-icon-button routerLink="/notifications" matTooltip="Notifications">
             <mat-icon [matBadge]="unreadCount" [matBadgeHidden]="unreadCount === 0" matBadgeColor="warn">
               notifications

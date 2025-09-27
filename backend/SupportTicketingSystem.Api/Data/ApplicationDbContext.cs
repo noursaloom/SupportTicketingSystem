@@ -101,25 +101,10 @@ public class ApplicationDbContext : DbContext
                   .HasForeignKey(e => e.TicketId)
                   .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasIndex(e => new { e.UserId, e.IsRead });
-        });
-
-        // Notification configuration
-        modelBuilder.Entity<Notification>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Message).IsRequired();
-            entity.Property(e => e.Type).HasConversion<int>();
-
-            entity.HasOne(e => e.User)
+            entity.HasOne(e => e.Project)
                   .WithMany()
-                  .HasForeignKey(e => e.UserId)
-                  .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.Ticket)
-                  .WithMany()
-                  .HasForeignKey(e => e.TicketId)
-                  .OnDelete(DeleteBehavior.Cascade);
+                  .HasForeignKey(e => e.ProjectId)
+                  .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasIndex(e => new { e.UserId, e.IsRead });
         });

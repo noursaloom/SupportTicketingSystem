@@ -6,6 +6,10 @@ export interface Notification {
   ticketId: number;
   type: NotificationType;
   message: string;
+  ticketTitle?: string;
+  projectName?: string;
+  creatorName?: string;
+  descriptionSummary?: string;
   isRead: boolean;
   createdAt: Date;
   ticket: Ticket;

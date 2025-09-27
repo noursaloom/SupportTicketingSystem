@@ -181,6 +181,41 @@ import { Notification, NotificationType } from '../../core/models/notification.m
       justify-content: space-between;
       align-items: center;
       font-size: 0.875rem;
+
+    .notification-details {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .detail-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    .detail-item mat-icon {
+      font-size: 0.875rem;
+      width: 0.875rem;
+      height: 0.875rem;
+    }
+
+    .description-summary {
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      border-left: 3px solid #e0e0e0;
+    }
+
+    .description-summary p {
+      margin: 0;
+      font-size: 0.875rem;
+      color: rgba(0, 0, 0, 0.7);
+      line-height: 1.4;
+    }
       color: rgba(0, 0, 0, 0.6);
     }
 
