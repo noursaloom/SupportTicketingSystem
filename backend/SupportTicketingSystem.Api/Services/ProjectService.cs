@@ -129,29 +129,6 @@ public class ProjectService : IProjectService
         return MapToProjectDto(project);
     }
 
-    private async Task AssignUsersToProject(int projectId, List<int> userIds)
-    {
-        var project = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
-        if (project == null) return;
-
-        foreach (var userId in userIds)
-        {
-            var user = await _context.Users.FindAsync(userId);
-            if (user != null)
-            {
-                project.UserProjects.Add(new UserProject
-                {
-                    UserId = userId,
-                    ProjectId = project.Id,
-                    AssignedAt = DateTime.UtcNow
-                });
-            }
-        }
-
-        await _context.SaveChangesAsync();
-        return MapToProjectDto(project);
-    }
-
     public async Task<bool> DeleteProjectAsync(int id)
     {
         var project = await _context.Projects
@@ -212,11 +189,15 @@ public class ProjectService : IProjectService
                         ProjectId = projectId,
                         AssignedAt = DateTime.UtcNow
                     });
-                }
 
-                // Send email notification for new project assignment
-                var currentUser = await _context.Users.FirstAsync(); // In real app, get from auth context
-                await _emailService.SendUserAddedToProjectEmailAsync(project, user, currentUser);
+                    // Send email notification for new project assignment
+                    var project = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+                    var currentUser = await _context.Users.FirstAsync(); // In real app, get from auth context
+                    if (project != null)
+                    {
+                        await _emailService.SendUserAddedToProjectEmailAsync(project, user, currentUser);
+                    }
+                }
             }
         }
 
