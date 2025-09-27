@@ -26,6 +26,12 @@ namespace SupportTicketingSystem.Api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CreatorName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DescriptionSummary")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("IsRead")
                         .HasColumnType("INTEGER");
 
@@ -33,8 +39,17 @@ namespace SupportTicketingSystem.Api.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ProjectName")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("TicketId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("TicketTitle")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Type")
                         .HasColumnType("INTEGER");
@@ -43,6 +58,8 @@ namespace SupportTicketingSystem.Api.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
 
                     b.HasIndex("TicketId");
 
@@ -182,6 +199,11 @@ namespace SupportTicketingSystem.Api.Migrations
 
             modelBuilder.Entity("SupportTicketingSystem.Api.Models.Notification", b =>
                 {
+                    b.HasOne("SupportTicketingSystem.Api.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("SupportTicketingSystem.Api.Models.Ticket", "Ticket")
                         .WithMany()
                         .HasForeignKey("TicketId")
@@ -193,6 +215,8 @@ namespace SupportTicketingSystem.Api.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Project");
 
                     b.Navigation("Ticket");
 
