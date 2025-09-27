@@ -108,5 +108,6 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await DatabaseInitializer.InitializeAsync(context);
 }
+app.MapGet("/api/health", () => Results.Ok("Healthy"));
 
 app.Run();
