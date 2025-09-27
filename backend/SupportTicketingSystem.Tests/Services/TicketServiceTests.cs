@@ -85,7 +85,7 @@ public class TicketServiceTests
             {
             Title = "Test Ticket",
             Description = "Test Description",
-            Priority = TicketPriority.High
+            Priority = (int)TicketPriority.High
             };
 
         // Act
@@ -95,7 +95,7 @@ public class TicketServiceTests
         Assert.NotNull(result);
         Assert.Equal(createTicketDto.Title, result.Title);
         Assert.Equal(createTicketDto.Description, result.Description);
-        Assert.Equal(createTicketDto.Priority, result.Priority);
+        Assert.Equal((int)createTicketDto.Priority, (int)result.Priority);
         Assert.Equal(TicketStatus.Open, result.Status);
         Assert.Equal(user.Id, result.CreatedByUser.Id);
         }
@@ -180,8 +180,8 @@ public class TicketServiceTests
             {
             Title = "Updated Title",
             Description = "Updated Description",
-            Priority = TicketPriority.High,
-            Status = TicketStatus.Pending
+            Priority = (int)TicketPriority.High,
+            Status = (int)TicketStatus.Pending
             };
 
         // Act
@@ -190,8 +190,8 @@ public class TicketServiceTests
         // Assert
         Assert.Equal(updateDto.Title, result.Title);
         Assert.Equal(updateDto.Description, result.Description);
-        Assert.Equal(updateDto.Priority, result.Priority);
-        Assert.Equal(updateDto.Status, result.Status);
+        Assert.Equal((int)updateDto.Priority, (int)result.Priority);
+        Assert.Equal((int)updateDto.Status, (int)result.Status);
         }
 
     [Fact]
@@ -220,8 +220,8 @@ public class TicketServiceTests
             {
             Title = "Updated Title",
             Description = "Updated Description",
-            Priority = TicketPriority.High,
-            Status = TicketStatus.Pending
+            Priority = (int)TicketPriority.High,
+            Status = (int)TicketStatus.Pending
             };
 
         // Act & Assert
