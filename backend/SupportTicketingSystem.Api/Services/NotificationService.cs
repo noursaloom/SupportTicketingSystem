@@ -21,6 +21,7 @@ public class NotificationService : INotificationService
                 .ThenInclude(t => t.CreatedByUser)
             .Include(n => n.Ticket)
                 .ThenInclude(t => t.AssignedToUser)
+            .Include(n => n.Project)
             .Where(n => n.UserId == userId)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
@@ -41,6 +42,7 @@ public class NotificationService : INotificationService
                 .ThenInclude(t => t.CreatedByUser)
             .Include(n => n.Ticket)
                 .ThenInclude(t => t.AssignedToUser)
+            .Include(n => n.Project)
             .FirstOrDefaultAsync(n => n.Id == notificationId && n.UserId == userId);
 
         if (notification == null)
@@ -54,20 +56,55 @@ public class NotificationService : INotificationService
 
     public async Task CreateTicketCreatedNotificationAsync(Ticket ticket)
     {
-        // Notify all ticket receivers and admins about new tickets
+        // Get ticket with all related data
+        var fullTicket = await _context.Tickets
+            .Include(t => t.CreatedByUser)
+            .Include(t => t.Project)
+                .ThenInclude(p => p.UserProjects)
+                .ThenInclude(up => up.User)
+            .FirstOrDefaultAsync(t => t.Id == ticket.Id);
+
+        if (fullTicket == null) return;
+
+        var notifications = new List<Notification>();
+
+        // Notify ticket receivers and admins
         var receiversAndAdmins = await _context.Users
             .Where(u => u.Role == UserRole.TicketReceiver || u.Role == UserRole.Admin)
-            .Where(u => u.Id != ticket.CreatedByUserId) // Don't notify the creator
+            .Where(u => u.Id != fullTicket.CreatedByUserId)
             .ToListAsync();
 
-        var notifications = receiversAndAdmins.Select(user => new Notification
+        // If ticket is assigned to a project, only notify users assigned to that project
+        if (fullTicket.Project != null)
         {
-            UserId = user.Id,
-            TicketId = ticket.Id,
-            Type = NotificationType.TicketCreated,
-            Message = $"New ticket created: {ticket.Title}",
-            CreatedAt = DateTime.UtcNow
-        });
+            var projectUserIds = fullTicket.Project.UserProjects.Select(up => up.UserId).ToList();
+            receiversAndAdmins = receiversAndAdmins.Where(u => projectUserIds.Contains(u.Id) || u.Role == UserRole.Admin).ToList();
+        }
+
+        foreach (var user in receiversAndAdmins)
+        {
+            var descriptionSummary = fullTicket.Description.Length > 100 
+                ? fullTicket.Description.Substring(0, 100) + "..." 
+                : fullTicket.Description;
+
+            var message = fullTicket.Project != null
+                ? $"New {GetPriorityLabel(fullTicket.Priority)} priority ticket created in project '{fullTicket.Project.Name}': {fullTicket.Title}"
+                : $"New {GetPriorityLabel(fullTicket.Priority)} priority ticket created: {fullTicket.Title}";
+
+            notifications.Add(new Notification
+            {
+                UserId = user.Id,
+                TicketId = fullTicket.Id,
+                ProjectId = fullTicket.ProjectId,
+                Type = NotificationType.TicketCreated,
+                Message = message,
+                TicketTitle = fullTicket.Title,
+                ProjectName = fullTicket.Project?.Name,
+                CreatorName = fullTicket.CreatedByUser.Name,
+                DescriptionSummary = descriptionSummary,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
 
         _context.Notifications.AddRange(notifications);
         await _context.SaveChangesAsync();
@@ -75,13 +112,32 @@ public class NotificationService : INotificationService
 
     public async Task CreateTicketStatusChangedNotificationAsync(Ticket ticket, TicketStatus oldStatus)
     {
+        // Get ticket with creator info
+        var fullTicket = await _context.Tickets
+            .Include(t => t.CreatedByUser)
+            .Include(t => t.AssignedToUser)
+            .Include(t => t.Project)
+            .FirstOrDefaultAsync(t => t.Id == ticket.Id);
+
+        if (fullTicket == null) return;
+
         // Notify the ticket creator about status changes
+        var message = $"Your ticket '{fullTicket.Title}' status changed from {GetStatusLabel(oldStatus)} to {GetStatusLabel(fullTicket.Status)}";
+        
+        if (fullTicket.AssignedToUser != null)
+        {
+            message += $" by {fullTicket.AssignedToUser.Name}";
+        }
+
         var notification = new Notification
         {
-            UserId = ticket.CreatedByUserId,
-            TicketId = ticket.Id,
+            UserId = fullTicket.CreatedByUserId,
+            TicketId = fullTicket.Id,
+            ProjectId = fullTicket.ProjectId,
             Type = NotificationType.TicketStatusChanged,
-            Message = $"Ticket status changed from {GetStatusLabel(oldStatus)} to {GetStatusLabel(ticket.Status)}: {ticket.Title}",
+            Message = message,
+            TicketTitle = fullTicket.Title,
+            ProjectName = fullTicket.Project?.Name,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -91,15 +147,32 @@ public class NotificationService : INotificationService
 
     public async Task CreateTicketAssignedNotificationAsync(Ticket ticket, int? oldAssigneeId)
     {
+        // Get ticket with full details
+        var fullTicket = await _context.Tickets
+            .Include(t => t.CreatedByUser)
+            .Include(t => t.AssignedToUser)
+            .Include(t => t.Project)
+            .FirstOrDefaultAsync(t => t.Id == ticket.Id);
+
+        if (fullTicket == null) return;
+
         // Notify the newly assigned user
-        if (ticket.AssignedToUserId.HasValue && ticket.AssignedToUserId != oldAssigneeId)
+        if (fullTicket.AssignedToUserId.HasValue && fullTicket.AssignedToUserId != oldAssigneeId)
         {
+            var message = fullTicket.Project != null
+                ? $"You have been assigned to ticket '{fullTicket.Title}' in project '{fullTicket.Project.Name}'"
+                : $"You have been assigned to ticket '{fullTicket.Title}'";
+
             var notification = new Notification
             {
-                UserId = ticket.AssignedToUserId.Value,
-                TicketId = ticket.Id,
+                UserId = fullTicket.AssignedToUserId.Value,
+                TicketId = fullTicket.Id,
+                ProjectId = fullTicket.ProjectId,
                 Type = NotificationType.TicketAssigned,
-                Message = $"You have been assigned to ticket: {ticket.Title}",
+                Message = message,
+                TicketTitle = fullTicket.Title,
+                ProjectName = fullTicket.Project?.Name,
+                CreatorName = fullTicket.CreatedByUser.Name,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -119,6 +192,10 @@ public class NotificationService : INotificationService
             Message = notification.Message,
             IsRead = notification.IsRead,
             CreatedAt = notification.CreatedAt,
+            TicketTitle = notification.TicketTitle,
+            ProjectName = notification.ProjectName,
+            CreatorName = notification.CreatorName,
+            DescriptionSummary = notification.DescriptionSummary,
             Ticket = new TicketDto
             {
                 Id = notification.Ticket.Id,
@@ -155,6 +232,17 @@ public class NotificationService : INotificationService
             TicketStatus.Pending => "Pending",
             TicketStatus.Resolved => "Resolved",
             TicketStatus.Closed => "Closed",
+            _ => "Unknown"
+        };
+    }
+
+    private static string GetPriorityLabel(TicketPriority priority)
+    {
+        return priority switch
+        {
+            TicketPriority.Low => "Low",
+            TicketPriority.Medium => "Medium",
+            TicketPriority.High => "High",
             _ => "Unknown"
         };
     }
