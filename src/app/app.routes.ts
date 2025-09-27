@@ -18,3 +18,4 @@ export const routes: Routes = [
     canActivate: [authGuard]
   }
 ];
+    redirectTo: '/login'
