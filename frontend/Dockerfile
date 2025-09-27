@@ -2,11 +2,11 @@
 FROM node:18-alpine AS build
 WORKDIR /app
 
-# Copy package files
+# نسخ ملفات الحزم وتثبيت dependencies
 COPY package*.json ./
 RUN npm install
 
-# Copy source code and build
+# نسخ كل الملفات وبناء Angular
 COPY . .
 RUN npm run build --prod
 
