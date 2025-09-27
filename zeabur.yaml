@@ -1,0 +1,11 @@
+# Zeabur configuration
+name: support-ticketing-system
+services:
+  app:
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - 80
+    env:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80

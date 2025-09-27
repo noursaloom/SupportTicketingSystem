@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "name": "support-ticketing-system",
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist/support-ticketing-frontend"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "env": {
+    "VITE_API_URL": "https://your-backend-url.herokuapp.com/api"
+  },
+  "functions": {
+    "frontend/src/main.ts": {
+      "includeFiles": "frontend/dist/**"
+    }
+  }
+}

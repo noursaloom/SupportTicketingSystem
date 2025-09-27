@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://support-ticketing-system-7msp.onrender.com/api'
+  apiUrl: '/api'  // This will use the same domain as frontend
 };

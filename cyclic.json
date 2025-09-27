@@ -1,0 +1,12 @@
+{
+  "name": "support-ticketing-system",
+  "build": {
+    "command": "docker build -t app .",
+    "output": "."
+  },
+  "start": "dotnet SupportTicketingSystem.Api.dll",
+  "env": {
+    "ASPNETCORE_ENVIRONMENT": "Production",
+    "ASPNETCORE_URLS": "http://+:8080"
+  }
+}
