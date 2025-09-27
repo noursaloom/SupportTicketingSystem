@@ -2,26 +2,18 @@
 FROM node:18-alpine AS build
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-
 # Install dependencies
-RUN npm ci --only=production
+COPY package*.json ./
+RUN npm install
 
-# Copy source code and build
+# Copy source and build (production config)
 COPY . .
-RUN npm run build --prod
+RUN npm run build -- --configuration=production
 
-# Stage 2: Serve with Nginx
+# Stage 2: Nginx serve
 FROM nginx:alpine
-# Copy built app to nginx
 COPY --from=build /app/dist/support-ticketing-frontend /usr/share/nginx/html
+COPY default.conf /etc/nginx/conf.d/default.conf
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Expose port
 EXPOSE 80
-
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
