@@ -1,0 +1,15 @@
+build:
+  docker:
+    backend: backend/Dockerfile
+    frontend: frontend/Dockerfile
+release:
+  image: backend
+  command:
+    - dotnet ef database update
+run:
+  backend: 
+    image: backend
+    command: dotnet SupportTicketingSystem.Api.dll
+  frontend:
+    image: frontend
+    command: nginx -g "daemon off;"

@@ -72,11 +72,15 @@ builder.Services.AddCors(options =>
             .WithOrigins(
                 "http://localhost:4200", 
                 "https://localhost:4200", 
+                "http://localhost:3000",
+                "https://localhost:3000",
                 "https://*.netlify.app", 
                 "https://*.vercel.app", 
                 "https://*.herokuapp.com",
                 "https://*.azurestaticapps.net",
-                "https://*.azurewebsites.net"
+                "https://*.azurewebsites.net",
+                "https://*.railway.app",
+                "https://*.render.com"
             )
             .AllowAnyMethod()
             .AllowAnyHeader()
