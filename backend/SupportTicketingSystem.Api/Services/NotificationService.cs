@@ -89,7 +89,7 @@ public class NotificationService : INotificationService
         // If ticket is assigned to a project, only notify users assigned to that project
         if (fullTicket.Project != null)
         {
-            var projectUserIds = fullTicket.Project.UserProjects.Select(up => up.UserId).ToList();
+            var projectUserIds = fullTicket.Project?.UserProjects?.Select(up => up.UserId).ToList() ?? new List<int>();
             receiversAndAdmins = receiversAndAdmins.Where(u => projectUserIds.Contains(u.Id) || u.Role == UserRole.Admin).ToList();
         }
 
@@ -192,10 +192,6 @@ public class NotificationService : INotificationService
             Message = notification.Message,
             IsRead = notification.IsRead,
             CreatedAt = notification.CreatedAt,
-            TicketTitle = notification.TicketTitle,
-            ProjectName = notification.ProjectName,
-            CreatorName = notification.CreatorName,
-            DescriptionSummary = notification.DescriptionSummary,
             Ticket = new TicketDto
             {
                 Id = notification.Ticket.Id,
