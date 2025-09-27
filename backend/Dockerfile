@@ -21,7 +21,8 @@ RUN mkdir -p /app/data
 
 # Set environment variables
 ENV ASPNETCORE_ENVIRONMENT=Production
-ENV ASPNETCORE_URLS=http://+:80
+ENV ASPNETCORE_URLS=http://+:${PORT}
+
 
 # Expose port
 EXPOSE 80
