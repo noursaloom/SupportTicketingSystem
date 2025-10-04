@@ -12,10 +12,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { filter } from 'rxjs/operators';
 
-import { AuthService } from './core/services/auth.service';
-import { NotificationService } from './core/services/notification.service';
-import { User, UserRole } from './core/models/auth.models';
-import { Notification } from './core/models/notification.models';
+import { AuthService, AppUser } from './core/services/auth.service';
+import { NotificationService, Notification } from './core/services/notification.service';
 import { MatDividerModule } from '@angular/material/divider';
 
 @Component({
@@ -41,54 +39,38 @@ import { MatDividerModule } from '@angular/material/divider';
       <mat-toolbar color="primary" *ngIf="showToolbar">
         <span>Support Ticketing System</span>
         <span class="spacer"></span>
-        
+
         <ng-container *ngIf="currentUser">
           <button mat-button routerLink="/tickets">
             <mat-icon>confirmation_number</mat-icon>
             Tickets
           </button>
-          
-          <button mat-button routerLink="/tickets/create">
+
+          <button mat-button routerLink="/tickets/create" *ngIf="canCreateTickets">
             <mat-icon>add</mat-icon>
             New Ticket
           </button>
-          
-          <button mat-button routerLink="/users" *ngIf="isAdmin">
+
+          <button mat-button routerLink="/users" *ngIf="isManager">
             <mat-icon>people</mat-icon>
-            Users
+            User Management
           </button>
-          
-          <button mat-button routerLink="/projects" *ngIf="isAdmin">
+
+          <button mat-button routerLink="/projects" *ngIf="isManager">
             <mat-icon>folder</mat-icon>
             Projects
           </button>
-          
-          <button mat-button [matMenuTriggerFor]="adminMenu" *ngIf="isAdmin">
-            <mat-icon>admin_panel_settings</mat-icon>
-            Admin
-          </button>
-          
-          <mat-menu #adminMenu="matMenu">
-            <button mat-menu-item routerLink="/admin/users">
-              <mat-icon>people</mat-icon>
-              User Management
-            </button>
-            <button mat-menu-item routerLink="/admin/projects">
-              <mat-icon>folder</mat-icon>
-              Project Management
-            </button>
-          </mat-menu>
-          
-          <button 
-            mat-icon-button 
-            [matMenuTriggerFor]="notificationMenu" 
+
+          <button
+            mat-icon-button
+            [matMenuTriggerFor]="notificationMenu"
             matTooltip="Notifications"
             (click)="loadNotifications()">
             <mat-icon [matBadge]="unreadCount" [matBadgeHidden]="unreadCount === 0" matBadgeColor="warn">
               notifications
             </mat-icon>
           </button>
-          
+
           <mat-menu #notificationMenu="matMenu" class="notification-menu">
             <div class="notification-header" mat-menu-item disabled>
               <h3>Notifications</h3>
@@ -97,19 +79,19 @@ import { MatDividerModule } from '@angular/material/divider';
               </button>
             </div>
             <mat-divider></mat-divider>
-            
+
             <div *ngIf="loadingNotifications" class="notification-loading" mat-menu-item disabled>
               <mat-spinner diameter="20"></mat-spinner>
               <span>Loading...</span>
             </div>
-            
-            <div *ngIf="!loadingNotifications && recentNotifications.length === 0" 
+
+            <div *ngIf="!loadingNotifications && recentNotifications.length === 0"
                  class="no-notifications" mat-menu-item disabled>
               <mat-icon>notifications_none</mat-icon>
               <span>No new notifications</span>
             </div>
-            
-            <div *ngFor="let notification of recentNotifications.slice(0, 5)" 
+
+            <div *ngFor="let notification of recentNotifications.slice(0, 5)"
                  class="notification-item"
                  [class.unread]="!notification.isRead"
                  mat-menu-item
@@ -122,24 +104,24 @@ import { MatDividerModule } from '@angular/material/divider';
                 </div>
               </div>
             </div>
-            
+
             <mat-divider *ngIf="recentNotifications.length > 0"></mat-divider>
             <button mat-menu-item routerLink="/notifications" (click)="closeNotificationMenu()">
               <mat-icon>list</mat-icon>
               View All Notifications
             </button>
           </mat-menu>
-          
+
           <button mat-icon-button [matMenuTriggerFor]="userMenu">
             <mat-icon>account_circle</mat-icon>
           </button>
-          
+
           <mat-menu #userMenu="matMenu">
             <div mat-menu-item disabled class="user-info">
               <div>
-                <div><strong>{{ currentUser.name }}</strong></div>
+                <div><strong>{{ currentUser.fullName }}</strong></div>
                 <div class="user-email">{{ currentUser.email }}</div>
-                <div class="user-role">{{ currentUser.role }}</div>
+                <div class="user-role">{{ getRoleLabel(currentUser.role) }}</div>
               </div>
             </div>
             <mat-divider></mat-divider>
@@ -150,7 +132,7 @@ import { MatDividerModule } from '@angular/material/divider';
           </mat-menu>
         </ng-container>
       </mat-toolbar>
-      
+
       <main class="main-content">
         <router-outlet></router-outlet>
       </main>
@@ -162,22 +144,27 @@ import { MatDividerModule } from '@angular/material/divider';
       flex-direction: column;
       height: 100vh;
     }
-    
+
+    .spacer {
+      flex: 1;
+    }
+
     .main-content {
       flex: 1;
       overflow-y: auto;
     }
-    
+
     .user-info {
       pointer-events: none;
       opacity: 0.8;
+      padding: 8px 16px;
     }
-    
+
     .user-email {
       font-size: 0.875rem;
       color: rgba(0, 0, 0, 0.6);
     }
-    
+
     .user-role {
       font-size: 0.75rem;
       color: rgba(0, 0, 0, 0.5);
@@ -268,7 +255,7 @@ import { MatDividerModule } from '@angular/material/divider';
   `]
 })
 export class AppComponent implements OnInit {
-  currentUser: User | null = null;
+  currentUser: AppUser | null = null;
   showToolbar = true;
   unreadCount = 0;
   recentNotifications: Notification[] = [];
@@ -285,27 +272,40 @@ export class AppComponent implements OnInit {
       this.currentUser = user;
     });
 
-    // Subscribe to unread notifications count
     this.notificationService.unreadCount$.subscribe(count => {
       this.unreadCount = count;
     });
 
-  // Hide toolbar on auth pages
-  this.router.events.pipe(
-    filter(event => event instanceof NavigationEnd)
-  ).subscribe(event => {
-    const navEnd = event as NavigationEnd;  
-    this.showToolbar = !['/login', '/register'].includes(navEnd.url);
-  });
-}
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(event => {
+      const navEnd = event as NavigationEnd;
+      this.showToolbar = !['/login', '/register'].includes(navEnd.url);
+    });
+  }
 
-  get isAdmin(): boolean {
-    return this.currentUser?.role === UserRole.Admin;
+  get isManager(): boolean {
+    return this.currentUser?.role === 'manager';
+  }
+
+  get canCreateTickets(): boolean {
+    return this.currentUser?.role === 'applier' || this.currentUser?.role === 'manager';
+  }
+
+  getRoleLabel(role: string): string {
+    switch (role) {
+      case 'applier': return 'Ticket Applier';
+      case 'receiver': return 'Ticket Receiver';
+      case 'manager': return 'Project Manager';
+      default: return role;
+    }
   }
 
   loadNotifications(): void {
+    if (!this.currentUser) return;
+
     this.loadingNotifications = true;
-    this.notificationService.getNotifications().subscribe({
+    this.notificationService.getNotifications(this.currentUser.id).subscribe({
       next: (notifications) => {
         this.recentNotifications = notifications.slice(0, 5);
         this.loadingNotifications = false;
@@ -317,22 +317,23 @@ export class AppComponent implements OnInit {
   }
 
   onNotificationClick(notification: Notification): void {
-    // Mark as read if not already read
     if (!notification.isRead) {
       this.notificationService.markAsRead(notification.id).subscribe({
         next: () => {
           notification.isRead = true;
-          this.notificationService.refreshUnreadCount();
+          if (this.currentUser) {
+            this.notificationService.refreshUnreadCount(this.currentUser.id);
+          }
         }
       });
     }
-    
-    // Navigate to ticket details
-    this.router.navigate(['/tickets', notification.ticketId]);
+
+    if (notification.ticketId) {
+      this.router.navigate(['/tickets', notification.ticketId]);
+    }
   }
 
   closeNotificationMenu(): void {
-    // Menu will close automatically when navigating
   }
 
   logout() {

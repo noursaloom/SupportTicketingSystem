@@ -10,8 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
-import { AuthService } from '../../core/services/auth.service';
-import { RegisterRequest } from '../../core/models/auth.models';
+import { AuthService, RegisterRequest } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-register',
@@ -114,7 +113,13 @@ export class RegisterComponent {
   onSubmit(): void {
     if (this.registerForm.valid) {
       this.loading = true;
-      const registerRequest: RegisterRequest = this.registerForm.value;
+      const formValue = this.registerForm.value;
+      const registerRequest: RegisterRequest = {
+        email: formValue.email,
+        password: formValue.password,
+        fullName: formValue.name,
+        role: 'applier'
+      };
 
       this.authService.register(registerRequest).subscribe({
         next: () => {
