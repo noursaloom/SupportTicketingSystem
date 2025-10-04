@@ -12,9 +12,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 
-import { ProjectService } from '../../core/services/project.service';
-import { Project } from '../../core/models/project.models';
-import { User } from '../../core/models/auth.models';
+import { ProjectService, Project } from '../../core/services/project.service';
+import { AuthService, AppUser } from '../../core/services/auth.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { ProjectFormDialogComponent } from '../../projects/project-form-dialog/project-form-dialog.component';
 
@@ -541,7 +540,7 @@ export class ProjectManagementComponent implements OnInit {
     });
   }
 
-  deleteProject(projectId: number): void {
+  deleteProject(projectId: string): void {
     this.projectService.deleteProject(projectId).subscribe({
       next: () => {
         this.snackBar.open('Project deleted successfully!', 'Close', { duration: 3000 });
