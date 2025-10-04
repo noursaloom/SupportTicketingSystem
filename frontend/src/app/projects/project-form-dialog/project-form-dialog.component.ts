@@ -10,10 +10,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatChipsModule } from '@angular/material/chips';
 
-import { ProjectService } from '../../core/services/project.service';
+import { ProjectService, Project, CreateProjectRequest, UpdateProjectRequest } from '../../core/services/project.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Project, CreateProjectRequest, UpdateProjectRequest } from '../../core/models/project.models';
-import { User } from '../../core/models/auth.models';
+import { AppUser } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-project-form-dialog',
@@ -59,7 +58,7 @@ import { User } from '../../core/models/auth.models';
           <mat-label>Assign Users</mat-label>
           <mat-select formControlName="userIds" multiple>
             <mat-option *ngFor="let user of availableUsers" [value]="user.id">
-              {{ user.name }} ({{ user.email }}) - {{ user.roleDisplayName }}
+              {{ user.fullName }} ({{ user.email }}) - {{ getRoleDisplayName(user.role) }}
             </mat-option>
           </mat-select>
           <mat-hint>Select users to assign to this project</mat-hint>
@@ -69,7 +68,7 @@ import { User } from '../../core/models/auth.models';
           <label>Selected Users:</label>
           <mat-chip-set>
             <mat-chip *ngFor="let user of selectedUsers" class="selected-user-chip">
-              {{ user.name }}
+              {{ user.fullName }}
             </mat-chip>
           </mat-chip-set>
         </div>
@@ -118,8 +117,8 @@ export class ProjectFormDialogComponent implements OnInit {
   projectForm: FormGroup;
   loading = false;
   isEditMode = false;
-  availableUsers: User[] = [];
-  selectedUsers: User[] = [];
+  availableUsers: AppUser[] = [];
+  selectedUsers: AppUser[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -134,7 +133,7 @@ export class ProjectFormDialogComponent implements OnInit {
     this.projectForm = this.fb.group({
       name: [data?.name || '', Validators.required],
       description: [data?.description || '', Validators.required],
-      userIds: [data?.assignedUsers?.map(u => u.id) || []]
+      userIds: [[]]
     });
   }
 
@@ -192,8 +191,14 @@ export class ProjectFormDialogComponent implements OnInit {
         });
       } else {
         const createRequest: CreateProjectRequest = this.projectForm.value;
+        const currentUser = this.authService.getCurrentUser();
+        if (!currentUser) {
+          this.snackBar.open('User not authenticated', 'Close', { duration: 3000 });
+          this.loading = false;
+          return;
+        }
 
-        this.projectService.createProject(createRequest).subscribe({
+        this.projectService.createProject(createRequest, currentUser.id).subscribe({
           next: () => {
             this.snackBar.open('Project created successfully!', 'Close', { duration: 3000 });
             this.dialogRef.close(true);
@@ -210,5 +215,18 @@ export class ProjectFormDialogComponent implements OnInit {
 
   onCancel(): void {
     this.dialogRef.close(false);
+  }
+
+  getRoleDisplayName(role: string): string {
+    switch (role) {
+      case 'manager':
+        return 'Manager';
+      case 'receiver':
+        return 'Receiver';
+      case 'applier':
+        return 'Applier';
+      default:
+        return role;
+    }
   }
 }

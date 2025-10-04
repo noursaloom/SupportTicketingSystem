@@ -10,8 +10,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatBadgeModule } from '@angular/material/badge';
 
-import { NotificationService } from '../../core/services/notification.service';
-import { Notification, NotificationType } from '../../core/models/notification.models';
+import { NotificationService, Notification } from '../../core/services/notification.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-notification-center',
@@ -57,19 +57,19 @@ import { Notification, NotificationType } from '../../core/models/notification.m
               <mat-icon matListItemIcon [ngClass]="getNotificationIconClass(notification.type)">
                 {{ getNotificationIcon(notification.type) }}
               </mat-icon>
-              
+
               <div matListItemTitle class="notification-content">
                 <div class="notification-header">
                   <span class="notification-message">{{ notification.message }}</span>
-                  <mat-chip 
+                  <mat-chip
                     class="notification-type-chip"
                     [ngClass]="getNotificationTypeClass(notification.type)">
-                    {{ notification.typeDisplayName }}
+                    {{ getTypeDisplayName(notification.type) }}
                   </mat-chip>
                 </div>
-                
+
                 <div class="notification-meta">
-                  <span class="ticket-title">{{ notification.ticket?.title || 'Ticket' }}</span>
+                  <span class="ticket-title">Ticket</span>
                   <span class="notification-time">{{ notification.createdAt | date:'short' }}</span>
                 </div>
               </div>
@@ -285,19 +285,25 @@ import { Notification, NotificationType } from '../../core/models/notification.m
 export class NotificationCenterComponent implements OnInit {
   notifications: Notification[] = [];
   loading = true;
+  private userId: string = '';
 
   constructor(
     private notificationService: NotificationService,
+    private authService: AuthService,
     private router: Router,
     private snackBar: MatSnackBar
-  ) {}
+  ) {
+    const user = this.authService.getCurrentUser();
+    this.userId = user?.id || '';
+  }
 
   ngOnInit(): void {
     this.loadNotifications();
   }
 
   loadNotifications(): void {
-    this.notificationService.getNotifications().subscribe({
+    if (!this.userId) return;
+    this.notificationService.getNotifications(this.userId).subscribe({
       next: (notifications) => {
         this.notifications = notifications;
         this.loading = false;
@@ -326,15 +332,15 @@ export class NotificationCenterComponent implements OnInit {
     }
 
     this.notificationService.markAsRead(notification.id).subscribe({
-      next: (updatedNotification) => {
+      next: () => {
         // Update the notification in the list
         const index = this.notifications.findIndex(n => n.id === notification.id);
         if (index !== -1) {
-          this.notifications[index] = updatedNotification;
+          this.notifications[index] = { ...this.notifications[index], isRead: true };
         }
-        
+
         // Refresh unread count
-        this.notificationService.refreshUnreadCount();
+        this.notificationService.refreshUnreadCount(this.userId);
       },
       error: (error) => {
         const message = error.error?.message || 'Failed to mark notification as read';
@@ -343,52 +349,67 @@ export class NotificationCenterComponent implements OnInit {
     });
   }
 
-  getNotificationIcon(type: NotificationType): string {
+  getNotificationIcon(type: string): string {
     switch (type) {
-      case NotificationType.TicketCreated:
-        return 'add_circle';
-      case NotificationType.TicketAssigned:
+      case 'ticket_assigned':
         return 'assignment_ind';
-      case NotificationType.TicketStatusChanged:
+      case 'ticket_updated':
         return 'update';
-      case NotificationType.TicketUpdated:
-        return 'edit';
+      case 'ticket_commented':
+        return 'comment';
+      case 'project_assigned':
+        return 'folder';
       default:
         return 'notifications';
     }
   }
 
-  getNotificationIconClass(type: NotificationType): string {
+  getNotificationIconClass(type: string): string {
     switch (type) {
-      case NotificationType.TicketCreated:
-        return 'notification-icon created';
-      case NotificationType.TicketAssigned:
+      case 'ticket_assigned':
         return 'notification-icon assigned';
-      case NotificationType.TicketStatusChanged:
-        return 'notification-icon status-changed';
-      case NotificationType.TicketUpdated:
+      case 'ticket_updated':
         return 'notification-icon updated';
+      case 'ticket_commented':
+        return 'notification-icon commented';
+      case 'project_assigned':
+        return 'notification-icon project';
       default:
         return 'notification-icon';
     }
   }
 
-  getNotificationTypeClass(type: NotificationType): string {
+  getNotificationTypeClass(type: string): string {
     switch (type) {
-      case NotificationType.TicketCreated:
-        return 'created';
-      case NotificationType.TicketAssigned:
+      case 'ticket_assigned':
         return 'assigned';
-      case NotificationType.TicketStatusChanged:
-        return 'status-changed';
-      case NotificationType.TicketUpdated:
+      case 'ticket_updated':
         return 'updated';
+      case 'ticket_commented':
+        return 'commented';
+      case 'project_assigned':
+        return 'project';
       default:
         return '';
     }
   }
 
-  trackByNotificationId(index: number, notification: Notification): number {
+  getTypeDisplayName(type: string): string {
+    switch (type) {
+      case 'ticket_assigned':
+        return 'Assigned';
+      case 'ticket_updated':
+        return 'Updated';
+      case 'ticket_commented':
+        return 'Commented';
+      case 'project_assigned':
+        return 'Project';
+      default:
+        return 'Notification';
+    }
+  }
+
+  trackByNotificationId(index: number, notification: Notification): string {
     return notification.id;
   }
 }

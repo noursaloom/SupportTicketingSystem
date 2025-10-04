@@ -11,17 +11,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 
-import { TicketService } from '../../core/services/ticket.service';
+import { TicketService, Ticket, CreateTicketRequest, UpdateTicketRequest } from '../../core/services/ticket.service';
 import { AuthService } from '../../core/services/auth.service';
-import { 
-  Ticket, 
-  CreateTicketRequest, 
-  UpdateTicketRequest, 
-  TicketPriority, 
-  TicketStatus,
-  TICKET_PRIORITY_LABELS,
-  TICKET_STATUS_LABELS
-} from '../../core/models/ticket.models';
 
 @Component({
   selector: 'app-ticket-form',
@@ -140,18 +131,22 @@ export class TicketFormComponent implements OnInit {
   ticketForm: FormGroup;
   loading = false;
   isEditMode = false;
-  ticketId?: number;
+  ticketId?: string;
   currentTicket?: Ticket;
 
-  priorityOptions = Object.entries(TICKET_PRIORITY_LABELS).map(([key, label]) => ({
-    value: parseInt(key),
-    label
-  }));
+  priorityOptions = [
+    { value: 'low', label: 'Low' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'high', label: 'High' },
+    { value: 'critical', label: 'Critical' }
+  ];
 
-  statusOptions = Object.entries(TICKET_STATUS_LABELS).map(([key, label]) => ({
-    value: parseInt(key),
-    label
-  }));
+  statusOptions = [
+    { value: 'open', label: 'Open' },
+    { value: 'in_progress', label: 'In Progress' },
+    { value: 'resolved', label: 'Resolved' },
+    { value: 'closed', label: 'Closed' }
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -164,8 +159,9 @@ export class TicketFormComponent implements OnInit {
     this.ticketForm = this.fb.group({
       title: ['', Validators.required],
       description: ['', Validators.required],
-      priority: [TicketPriority.Low, Validators.required],
-      status: [TicketStatus.Open]
+      priority: ['low', Validators.required],
+      projectId: ['', Validators.required],
+      status: ['open']
     });
   }
 
@@ -173,7 +169,7 @@ export class TicketFormComponent implements OnInit {
     this.route.params.subscribe(params => {
       if (params['id']) {
         this.isEditMode = true;
-        this.ticketId = +params['id'];
+        this.ticketId = params['id'];
         this.loadTicket();
       }
     });
@@ -217,8 +213,8 @@ export class TicketFormComponent implements OnInit {
         const updateRequest: UpdateTicketRequest = {
           title: this.ticketForm.value.title,
           description: this.ticketForm.value.description,
-          priority: Number(this.ticketForm.value.priority),
-          status: Number(this.ticketForm.value.status)
+          priority: this.ticketForm.value.priority,
+          status: this.ticketForm.value.status
         };
         this.ticketService.updateTicket(this.ticketId, updateRequest).subscribe({
           next: (ticket) => {
@@ -235,10 +231,18 @@ export class TicketFormComponent implements OnInit {
         const createRequest: CreateTicketRequest = {
           title: this.ticketForm.value.title,
           description: this.ticketForm.value.description,
-          priority: Number(this.ticketForm.value.priority)
+          priority: this.ticketForm.value.priority,
+          projectId: this.ticketForm.value.projectId
         };
 
-        this.ticketService.createTicket(createRequest).subscribe({
+        const currentUser = this.authService.getCurrentUser();
+        if (!currentUser) {
+          this.snackBar.open('User not authenticated', 'Close', { duration: 3000 });
+          this.loading = false;
+          return;
+        }
+
+        this.ticketService.createTicket(createRequest, currentUser.id).subscribe({
           next: (ticket) => {
             this.snackBar.open('Ticket created successfully!', 'Close', { duration: 3000 });
             this.router.navigate(['/tickets', ticket.id]);
@@ -255,7 +259,7 @@ export class TicketFormComponent implements OnInit {
 
   canEditTicket(ticket: Ticket): boolean {
     const currentUser = this.authService.getCurrentUser();
-    return this.authService.isAdminOrReceiver() || ticket.createdByUser.id === currentUser?.id;
+    return this.authService.isAdminOrReceiver() || ticket.createdBy === currentUser?.id;
   }
 
   goBack(): void {
